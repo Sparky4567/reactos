@@ -1,0 +1,254 @@
+import { createContext, useContext, useEffect, useReducer, type ReactNode } from "react";
+import type { OSState, OSAction, WindowState, DesktopIcon } from "./types";
+import { DEFAULT_FS, cloneFS, createFolder, createFile, deleteNode, renameNode, writeFile, moveNode } from "./fs";
+
+const DEFAULT_WALLPAPER =
+  "linear-gradient(135deg, #2b5876 0%, #4e4376 50%, #1a1a2e 100%)";
+
+const initialIcons: DesktopIcon[] = [
+  { id: "di-explorer", appId: "explorer", label: "File Explorer", x: 24, y: 24 },
+  { id: "di-notepad", appId: "notepad", label: "Notepad", x: 24, y: 120 },
+  { id: "di-calc", appId: "calculator", label: "Calculator", x: 24, y: 216 },
+  { id: "di-browser", appId: "browser", label: "Edge", x: 24, y: 312 },
+  { id: "di-settings", appId: "settings", label: "Settings", x: 24, y: 408 },
+  { id: "di-terminal", appId: "terminal", label: "Terminal", x: 120, y: 24 },
+  { id: "di-notes", appId: "notes", label: "OneNote", x: 24, y: 600 },
+];
+
+function loadFS() {
+  try {
+    const raw = localStorage.getItem("reactos.fs");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return cloneFS(DEFAULT_FS);
+}
+
+function loadPassword() {
+  try {
+    const stored = localStorage.getItem("reactos.password");
+    // Default password for a fresh install is "admin"
+    return stored === null ? "admin" : stored;
+  } catch {}
+  return "admin";
+}
+
+const initialState: OSState = {
+  windows: [],
+  nextZ: 10,
+  activeId: null,
+  startOpen: false,
+  search: "",
+  widgetsOpen: false,
+  actionCenterOpen: false,
+  contextMenu: null,
+  notifications: [],
+  theme: "dark",
+  wallpaper: DEFAULT_WALLPAPER,
+  locked: true,
+  booted: false,
+  bootProgress: 0,
+  desktopIcons: initialIcons,
+  fs: loadFS(),
+  password: loadPassword(),
+};
+
+let idCounter = 0;
+const newId = (prefix: string) => `${prefix}-${++idCounter}-${Date.now()}`;
+
+const defaultSize: Record<string, { w: number; h: number }> = {
+  explorer: { w: 900, h: 600 },
+  notepad: { w: 640, h: 480 },
+  calculator: { w: 320, h: 520 },
+  browser: { w: 1000, h: 680 },
+  settings: { w: 820, h: 620 },
+  terminal: { w: 760, h: 480 },
+  notes: { w: 900, h: 620 },
+};
+
+function cascadeOffset(windows: WindowState[]) {
+  const n = windows.length;
+  return { x: 80 + (n % 8) * 30, y: 60 + (n % 8) * 30 };
+}
+
+function reducer(state: OSState, action: OSAction): OSState {
+  switch (action.type) {
+    case "BOOT_DONE":
+      return { ...state, booted: true, bootProgress: 100 };
+    case "SET_BOOT_PROGRESS":
+      return { ...state, bootProgress: action.value };
+    case "UNLOCK":
+      return { ...state, locked: false };
+    case "LOCK":
+      return { ...state, locked: true, startOpen: false, widgetsOpen: false, actionCenterOpen: false, contextMenu: null };
+    case "OPEN_APP": {
+      const existing = state.windows.find((w) => w.appId === action.appId && !w.minimized);
+      // focus existing if present
+      const anyExisting = state.windows.find((w) => w.appId === action.appId);
+      if (anyExisting) {
+        const z = state.nextZ + 1;
+        return {
+          ...state,
+          nextZ: z,
+          activeId: anyExisting.id,
+          windows: state.windows.map((w) =>
+            w.id === anyExisting.id ? { ...w, minimized: false, z } : w
+          ),
+          startOpen: false,
+          search: "",
+        };
+      }
+      const size = defaultSize[action.appId] ?? { w: 700, h: 500 };
+      const off = cascadeOffset(state.windows);
+      const z = state.nextZ + 1;
+      const win: WindowState = {
+        id: newId("win"),
+        appId: action.appId,
+        title: action.title ?? action.appId,
+        x: off.x,
+        y: off.y,
+        width: size.w,
+        height: size.h,
+        minimized: false,
+        maximized: false,
+        z,
+      };
+      return {
+        ...state,
+        windows: [...state.windows, win],
+        nextZ: z,
+        activeId: win.id,
+        startOpen: false,
+        search: "",
+      };
+      // keep existing var unused quiet
+      void existing;
+    }
+    case "CLOSE_WINDOW":
+      return {
+        ...state,
+        windows: state.windows.filter((w) => w.id !== action.id),
+        activeId: state.activeId === action.id ? null : state.activeId,
+      };
+    case "MINIMIZE":
+      return {
+        ...state,
+        windows: state.windows.map((w) => (w.id === action.id ? { ...w, minimized: true } : w)),
+        activeId: state.activeId === action.id ? null : state.activeId,
+      };
+    case "MAXIMIZE":
+      return {
+        ...state,
+        windows: state.windows.map((w) => {
+          if (w.id !== action.id) return w;
+          if (w.maximized) {
+            const r = w.restore ?? { x: w.x, y: w.y, width: w.width, height: w.height };
+            return { ...w, maximized: false, ...r, restore: undefined };
+          }
+          return {
+            ...w,
+            maximized: true,
+            restore: { x: w.x, y: w.y, width: w.width, height: w.height },
+            x: 0,
+            y: 0,
+            width: window.innerWidth,
+            height: window.innerHeight - 48,
+          };
+        }),
+      };
+    case "RESTORE":
+      return {
+        ...state,
+        windows: state.windows.map((w) => {
+          if (w.id !== action.id) return w;
+          const r = w.restore;
+          return r ? { ...w, maximized: false, minimized: false, ...r, restore: undefined } : { ...w, minimized: false };
+        }),
+        activeId: action.id,
+      };
+    case "FOCUS": {
+      const z = state.nextZ + 1;
+      return {
+        ...state,
+        nextZ: z,
+        activeId: action.id,
+        windows: state.windows.map((w) => (w.id === action.id ? { ...w, z, minimized: false } : w)),
+      };
+    }
+    case "MOVE":
+      return {
+        ...state,
+        windows: state.windows.map((w) => (w.id === action.id ? { ...w, x: action.x, y: action.y } : w)),
+      };
+    case "RESIZE":
+      return {
+        ...state,
+        windows: state.windows.map((w) =>
+          w.id === action.id
+            ? { ...w, width: Math.max(260, action.width), height: Math.max(180, action.height), x: action.x ?? w.x, y: action.y ?? w.y }
+            : w
+        ),
+      };
+    case "SET_START":
+      return { ...state, startOpen: action.open, widgetsOpen: action.open ? false : state.widgetsOpen, actionCenterOpen: action.open ? false : state.actionCenterOpen };
+    case "SET_SEARCH":
+      return { ...state, search: action.value, startOpen: true };
+    case "SET_WIDGETS":
+      return { ...state, widgetsOpen: action.open, startOpen: action.open ? false : state.startOpen };
+    case "SET_ACTION_CENTER":
+      return { ...state, actionCenterOpen: action.open, startOpen: action.open ? false : state.startOpen };
+    case "SET_CONTEXT_MENU":
+      return { ...state, contextMenu: action.menu };
+    case "PUSH_NOTIFICATION":
+      return { ...state, notifications: [action.n, ...state.notifications].slice(0, 8) };
+    case "DISMISS_NOTIFICATION":
+      return { ...state, notifications: state.notifications.filter((n) => n.id !== action.id) };
+    case "SET_THEME":
+      return { ...state, theme: action.theme };
+    case "SET_WALLPAPER":
+      return { ...state, wallpaper: action.wallpaper };
+    case "MOVE_DESKTOP_ICON":
+      return {
+        ...state,
+        desktopIcons: state.desktopIcons.map((d) => (d.id === action.id ? { ...d, x: action.x, y: action.y } : d)),
+      };
+    case "REMOVE_DESKTOP_ICON":
+      return { ...state, desktopIcons: state.desktopIcons.filter((d) => d.id !== action.id) };
+    case "FS_CREATE_FOLDER":
+      return { ...state, fs: createFolder(state.fs, action.path, action.name) };
+    case "FS_CREATE_FILE":
+      return { ...state, fs: createFile(state.fs, action.path, action.name, action.content) };
+    case "FS_DELETE":
+      return { ...state, fs: deleteNode(state.fs, action.path) };
+    case "FS_RENAME":
+      return { ...state, fs: renameNode(state.fs, action.path, action.name) };
+    case "FS_WRITE_FILE":
+      return { ...state, fs: writeFile(state.fs, action.path, action.content) };
+    case "FS_MOVE_NODE":
+      return { ...state, fs: moveNode(state.fs, action.from, action.to) };
+    case "SET_PASSWORD":
+      return { ...state, password: action.password };
+    default:
+      return state;
+  }
+}
+
+const Ctx = createContext<{ state: OSState; dispatch: React.Dispatch<OSAction> } | null>(null);
+
+export function OSProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  useEffect(() => {
+    try { localStorage.setItem("reactos.fs", JSON.stringify(state.fs)); } catch {}
+  }, [state.fs]);
+  useEffect(() => {
+    try { localStorage.setItem("reactos.password", state.password); } catch {}
+  }, [state.password]);
+  return <Ctx.Provider value={{ state, dispatch }}>{children}</Ctx.Provider>;
+}
+
+export function useOS() {
+  const v = useContext(Ctx);
+  if (!v) throw new Error("useOS outside provider");
+  return v;
+}
+export const newNotifId = () => newId("notif");
+export const newWinId = () => newId("win");
