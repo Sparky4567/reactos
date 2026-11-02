@@ -1,7 +1,24 @@
 import { serve } from "bun";
 import index from "./index.html";
 
+function getPort(): number {
+  const argIndex = process.argv.indexOf("--port");
+  if (argIndex !== -1) {
+    const value = process.argv[argIndex + 1];
+    if (value) {
+      const parsed = Number(value);
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+  }
+  if (process.env.PORT) {
+    const parsed = Number(process.env.PORT);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return 3000;
+}
+
 const server = serve({
+  port: getPort(),
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,
@@ -47,6 +64,28 @@ const server = serve({
             } else {
               body = base + body;
             }
+          } else if (ct.includes("text/css")) {
+            const baseDir = u.href.replace(/[^/]*$/, "");
+            body = body.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (_m, quote: string, raw: string) => {
+              const trimmed = raw.trim();
+              if (/^(data:|https?:|blob:|#)/i.test(trimmed)) return `url(${quote}${trimmed}${quote})`;
+              try {
+                const abs = new URL(trimmed, baseDir || u.origin).href;
+                return `url(${quote}${abs}${quote})`;
+              } catch {
+                return `url(${quote}${trimmed}${quote})`;
+              }
+            });
+            body = body.replace(/@import\s+(['"])([^'"]+)\1/gi, (_m, quote: string, raw: string) => {
+              const trimmed = raw.trim();
+              if (/^(data:|https?:|blob:|#)/i.test(trimmed)) return `@import ${quote}${trimmed}${quote}`;
+              try {
+                const abs = new URL(trimmed, baseDir || u.origin).href;
+                return `@import ${quote}${abs}${quote}`;
+              } catch {
+                return `@import ${quote}${trimmed}${quote}`;
+              }
+            });
           }
           return new Response(body, {
             status: res.status,

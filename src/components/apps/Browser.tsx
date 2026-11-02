@@ -1,27 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Tab { id: number; title: string; }
 
-export function Browser() {
+function proxyUrl(target: string): string {
+  return `/api/proxy?url=${encodeURIComponent(target)}`;
+}
+
+async function fetchText(target: string): Promise<string> {
+  const res = await fetch(proxyUrl(target));
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.text();
+}
+
+function resolveUrl(raw: string, base: string): string {
+  try {
+    return new URL(raw, base).href;
+  } catch {
+    return raw;
+  }
+}
+
+function isBingUrl(target: string): boolean {
+  return /bing\.com/i.test(target);
+}
+
+export function Browser({ windowId }: { windowId?: string }) {
   const [tabs, setTabs] = useState<Tab[]>([{ id: 1, title: "New Tab" }]);
   const [activeTab, setActiveTab] = useState(1);
   const [history, setHistory] = useState<string[]>(["https://www.bing.com"]);
   const [idx, setIdx] = useState(0);
   const [input, setInput] = useState("https://www.bing.com");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [html, setHtml] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const url = history[idx] ?? "https://www.bing.com";
 
   const go = (target?: string) => {
     let t = (target ?? input).trim();
     if (!/^https?:\/\//i.test(t)) {
-      // If it looks like a domain/host, treat it as a URL instead of a search query.
       if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(\/.*)?$/i.test(t) || /^localhost(:\d+)?(\/.*)?$/i.test(t)) {
         t = "https://" + t;
       } else {
         t = "https://www.bing.com/search?q=" + encodeURIComponent(t);
       }
+    }
+    if (!isBingUrl(t)) {
+      window.open(t, "_blank");
+      setInput(t);
+      return;
     }
     const next = history.slice(0, idx + 1);
     next.push(t);
@@ -33,7 +62,7 @@ export function Browser() {
 
   const back = () => { if (idx > 0) { setIdx(idx - 1); setInput(history[idx - 1]!); setLoading(true); } };
   const forward = () => { if (idx < history.length - 1) { setIdx(idx + 1); setInput(history[idx + 1]!); setLoading(true); } };
-  const reload = () => { setLoading(true); };
+  const reload = () => { setReloadKey((k) => k + 1); setLoading(true); };
 
   const newTab = () => {
     const id = Date.now();
@@ -43,6 +72,8 @@ export function Browser() {
     setHistory(h);
     setIdx(0);
     setInput("https://www.bing.com");
+    setHtml("");
+    setError(null);
     setLoading(true);
   };
 
@@ -58,6 +89,82 @@ export function Browser() {
       return filtered;
     });
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    (async () => {
+      try {
+        if (!isBingUrl(url)) {
+          window.open(url, "_blank");
+          if (!cancelled) {
+            setLoading(false);
+          }
+          return;
+        }
+        const pageUrl = url;
+        const htmlText = await fetchText(pageUrl);
+        if (cancelled) return;
+        const doc = new DOMParser().parseFromString(htmlText, "text/html");
+
+        const cssLinks = Array.from(doc.querySelectorAll('link[rel~="stylesheet"]'));
+        await Promise.all(cssLinks.map(async (link) => {
+          const href = link.getAttribute("href");
+          if (!href) return;
+          const abs = resolveUrl(href, pageUrl);
+          try {
+            const css = await fetchText(abs);
+            if (cancelled) return;
+            const style = doc.createElement("style");
+            style.textContent = css;
+            const media = link.getAttribute("media");
+            if (media) style.setAttribute("media", media);
+            link.replaceWith(style);
+          } catch {
+            // Leave original link in place if fetch fails.
+          }
+        }));
+
+        if (cancelled) return;
+
+        const scriptTags = Array.from(doc.querySelectorAll("script[src]"));
+        await Promise.all(scriptTags.map(async (script) => {
+          const src = script.getAttribute("src");
+          if (!src) return;
+          const abs = resolveUrl(src, pageUrl);
+          try {
+            const js = await fetchText(abs);
+            if (cancelled) return;
+            script.removeAttribute("src");
+            script.textContent = js;
+          } catch {
+            // Leave original src in place if fetch fails.
+          }
+        }));
+
+        if (cancelled) return;
+
+        try {
+          const title = doc.title?.trim().slice(0, 40);
+          if (title) {
+            setTabs((prev) => prev.map((t) => (t.id === activeTab ? { ...t, title } : t)));
+          }
+        } catch {
+          // ignore
+        }
+
+        const serialized = "<!DOCTYPE html>\n" + (doc.documentElement?.outerHTML ?? htmlText);
+        setHtml(serialized);
+      } catch (e) {
+        if (cancelled) return;
+        setError((e as Error).message);
+        setHtml("");
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [url, reloadKey]);
 
   return (
     <div className="app-browser">
@@ -97,12 +204,15 @@ export function Browser() {
       </div>
       <div className="browser-body">
         {loading && <div className="browser-loading" />}
-        <iframe
-          src={`/api/proxy?url=${encodeURIComponent(url)}`}
-          title="browser"
-          onLoad={() => setLoading(false)}
-          sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
-        />
+        {error && <div style={{ padding: 16, color: "#c00" }}>Failed to load page: {error}</div>}
+        {!error && (
+          <iframe
+            srcDoc={html}
+            title="browser"
+            onLoad={() => setLoading(false)}
+            sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+          />
+        )}
       </div>
     </div>
   );

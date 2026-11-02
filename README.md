@@ -13,7 +13,7 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - File Explorer (virtual file system)
 - Notepad and Notes
 - Calculator
-- Browser (proxied via /api/proxy)
+- Browser (renders Bing pages in-app via /api/proxy; other URLs open in a new tab)
 - Terminal
 - Settings (theme, wallpaper, password)
 - Notifications, widgets panel, action center
@@ -56,6 +56,16 @@ Output goes to dist/.
 
 ```bash
 bun run typecheck
+```
+
+## Configuration
+
+The dev/production server listens on port 3000 by default. Override it with a
+command-line flag or an environment variable:
+
+```bash
+bun dev -- --port 4000
+PORT=4000 bun start
 ```
 
 ## Default credentials
