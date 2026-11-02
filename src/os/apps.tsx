@@ -6,6 +6,7 @@ import { Browser } from "@/components/apps/Browser";
 import { Settings } from "@/components/apps/Settings";
 import { Terminal } from "@/components/apps/Terminal";
 import { Notes } from "@/components/apps/Notes";
+import { Chatbot } from "@/components/apps/Chatbot";
 
 export interface AppDef {
   id: string;
@@ -22,6 +23,7 @@ export const APPS: AppDef[] = [
   { id: "settings", name: "Settings", icon: "fa-cog", component: Settings },
   { id: "terminal", name: "Terminal", icon: "fa-terminal", component: Terminal },
   { id: "notes", name: "OneNote", icon: "fa-book", component: Notes },
+  { id: "chatbot", name: "Chatbot", icon: "fa-comments", component: Chatbot },
 ];
 
 export const APP_MAP = Object.fromEntries(APPS.map((a) => [a.id, a]));

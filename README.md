@@ -15,6 +15,7 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - Calculator
 - Browser (renders Bing pages in-app via /api/proxy; other URLs open in a new tab)
 - Terminal
+- Ollama Chat (connects to an Ollama server, lists/chooses models, streams chat with Markdown support, saves host/model/font settings)
 - Settings (theme, wallpaper, password)
 - Notifications, widgets panel, action center
 

@@ -12,6 +12,7 @@
   "dependencies": {
     "bootstrap": "^5.3.8",
     "font-awesome": "4.7.0",
+    "ollama-node": "^0.1.28",
     "react": "^19",
     "react-dom": "^19"
   },

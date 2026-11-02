@@ -13,6 +13,7 @@ const initialIcons: DesktopIcon[] = [
   { id: "di-settings", appId: "settings", label: "Settings", x: 24, y: 408 },
   { id: "di-terminal", appId: "terminal", label: "Terminal", x: 120, y: 24 },
   { id: "di-notes", appId: "notes", label: "OneNote", x: 24, y: 600 },
+  { id: "di-chatbot", appId: "chatbot", label: "Chatbot", x: 120, y: 120 },
 ];
 
 function loadFS() {
@@ -63,6 +64,7 @@ const defaultSize: Record<string, { w: number; h: number }> = {
   settings: { w: 820, h: 620 },
   terminal: { w: 760, h: 480 },
   notes: { w: 900, h: 620 },
+  chatbot: { w: 920, h: 640 },
 };
 
 function cascadeOffset(windows: WindowState[]) {

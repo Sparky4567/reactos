@@ -1,5 +1,6 @@
 import { serve } from "bun";
 import index from "./index.html";
+import { Ollama } from "ollama-node";
 
 function getPort(): number {
   const argIndex = process.argv.indexOf("--port");
@@ -17,8 +18,19 @@ function getPort(): number {
   return 3000;
 }
 
+
+function normalizeOllamaHost(input?: string | null): string {
+  let h = (input ?? "127.0.0.1").trim();
+  h = h.replace(/^https?:\/\//i, "");
+  h = h.replace(/\/.*/, "");
+  if (h.includes(":")) h = h.split(":")[0] ?? h;
+  if (!h) h = "127.0.0.1";
+  return h;
+}
+
 const server = serve({
   port: getPort(),
+  idleTimeout: 255,
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,
@@ -94,6 +106,114 @@ const server = serve({
         } catch (e) {
           return new Response("Proxy error: " + (e as Error).message, { status: 502 });
         }
+      },
+    },
+
+    "/api/ollama/models": {
+      async GET(req) {
+        const url = new URL(req.url);
+        const host = normalizeOllamaHost(url.searchParams.get("host"));
+        try {
+          const ollama = new Ollama(host);
+          const data = await ollama.listModels();
+          return Response.json({ host, models: data.models, complete: data.complete });
+        } catch (e) {
+          return Response.json({ host, error: (e as Error).message, models: [], complete: [] }, { status: 502 });
+        }
+      },
+    },
+
+    "/api/ollama/chat": {
+      async POST(req) {
+        let body: any = {};
+        try { body = await req.json(); } catch { return new Response("Bad JSON", { status: 400 }); }
+        const host = normalizeOllamaHost(body?.host);
+        const model = String(body?.model ?? "").trim();
+        const messages = Array.isArray(body?.messages) ? body.messages : (body?.prompt ? [{ role: "user", content: String(body.prompt) }] : []);
+        if (!model) return Response.json({ error: "Missing model" }, { status: 400 });
+
+        const base = `http://${host}:11434`;
+        let upstream: Response;
+        try {
+          upstream = await fetch(`${base}/api/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model, messages, stream: true }),
+          });
+        } catch (e) {
+          return Response.json({ error: (e as Error).message }, { status: 502 });
+        }
+        if (!upstream.ok || !upstream.body) {
+          let errMsg = `Upstream HTTP ${upstream.status}`;
+          try {
+            const j = await upstream.json();
+            if (j?.error) errMsg = typeof j.error === "string" ? j.error : JSON.stringify(j.error);
+          } catch {}
+          return Response.json({ error: errMsg }, { status: upstream.status || 502 });
+        }
+
+        const stream = new ReadableStream({
+          async start(controller) {
+            const enc = new TextEncoder();
+            const send = (obj: any) => controller.enqueue(enc.encode(`data: ${JSON.stringify(obj)}\n\n`));
+            const reader = upstream.body!.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+            let doneSent = false;
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || "";
+                for (const l of lines) {
+                  const trimmed = l.trim();
+                  if (!trimmed) continue;
+                  try {
+                    const j = JSON.parse(trimmed);
+                    if (j?.error) {
+                      send({ type: "error", message: typeof j.error === "string" ? j.error : JSON.stringify(j.error) });
+                      continue;
+                    }
+                    const text = j?.message?.content;
+                    if (text) send({ type: "token", text });
+                    if (j?.done && !doneSent) {
+                      doneSent = true;
+                      send({ type: "done" });
+                    }
+                  } catch {
+                    // ignore partial json
+                  }
+                }
+              }
+              if (buffer.trim()) {
+                try {
+                  const j = JSON.parse(buffer.trim());
+                  const text = j?.message?.content;
+                  if (text) send({ type: "token", text });
+                  if (j?.done && !doneSent) {
+                    doneSent = true;
+                    send({ type: "done" });
+                  }
+                } catch {}
+              }
+              if (!doneSent) send({ type: "done" });
+            } catch (e) {
+              send({ type: "error", message: (e as Error).message });
+            } finally {
+              controller.close();
+            }
+          },
+        });
+
+        return new Response(stream, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+          },
+        });
       },
     },
 
