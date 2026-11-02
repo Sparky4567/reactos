@@ -6,17 +6,20 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 
 ## Features
 
-- Desktop with draggable icons and context menus
-- Window manager (drag, resize, minimize, maximize, snap)
+- Desktop with draggable icons and context menus (single-tap launch on touch/mobile)
+- Window manager (drag, resize, minimize, maximize, snap, and viewport bounds clamping)
+- Mobile-responsive layout (auto-maximized windows on mobile, dynamic viewport height, safe-area inset support)
+- Mobile-optimized taskbar (touch-scrollable center apps, compact search and tray)
+- Responsive Widgets panel and Action center with safe-area spacing
 - Lock screen with password protection
 - Boot screen with progress animation
-- File Explorer (virtual file system)
-- Notepad and Notes
-- Calculator
+- File Explorer (virtual file system with responsive toolbar)
+- Notepad and Notes (touch-friendly menus and sidebars)
+- Calculator (responsive touch keypad)
 - Browser (renders Bing pages in-app via /api/proxy; other URLs open in a new tab)
-- Terminal
+- Terminal (responsive command line and prompt wrapping)
 - Ollama Chat (connects to an Ollama server, lists/chooses models, streams chat with Markdown support, saves host/model/font settings)
-- Settings (theme, wallpaper, password)
+- Settings (theme, wallpaper, password, and mobile-friendly category navigation)
 - Notifications, widgets panel, action center
 
 ## Getting started
@@ -57,6 +60,12 @@ Output goes to dist/.
 
 ```bash
 bun run typecheck
+```
+
+### Run tests
+
+```bash
+bun test
 ```
 
 ## Configuration

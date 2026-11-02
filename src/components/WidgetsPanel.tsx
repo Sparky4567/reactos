@@ -13,7 +13,13 @@ export function WidgetsPanel() {
     <div className="widgets-panel" onClick={(e) => e.stopPropagation()}>
       <div className="widgets-header">
         <h2>Widgets</h2>
-        <button onClick={() => dispatch({ type: "SET_WIDGETS", open: false })}><i className="fa fa-times" /></button>
+        <button
+          className="widgets-close-btn"
+          onClick={() => dispatch({ type: "SET_WIDGETS", open: false })}
+          title="Close"
+        >
+          <i className="fa fa-times" />
+        </button>
       </div>
       <div className="widgets-grid">
         <div className="widget weather">

@@ -31,10 +31,16 @@ export function WindowChrome({ winId }: { winId: string }) {
 
   const startDrag = (e: React.MouseEvent) => {
     if (win.maximized) return;
+    if (typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 540)) return;
     dispatch({ type: "FOCUS", id: winId });
     dragRef.current = { startX: e.clientX, startY: e.clientY, winX: win.x, winY: win.y };
     setDragging(true);
     e.preventDefault();
+  };
+
+  const handleTitlebarDoubleClick = () => {
+    if (typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 540)) return;
+    dispatch({ type: win.maximized ? "RESTORE" : "MAXIMIZE", id: winId });
   };
 
   const resizeRef = useRef<{ startX: number; startY: number; w: number; h: number; x: number; y: number; dir: string } | null>(null);
@@ -82,7 +88,7 @@ export function WindowChrome({ winId }: { winId: string }) {
   const Comp = app.component;
 
   const style: React.CSSProperties = win.maximized
-    ? { left: 0, top: 0, width: "100%", height: "calc(100vh - 48px)", zIndex: win.z }
+    ? { left: 0, top: 0, width: "100%", height: "100%", zIndex: win.z }
     : { left: win.x, top: win.y, width: win.width, height: win.height, zIndex: win.z };
 
   return (
@@ -91,7 +97,7 @@ export function WindowChrome({ winId }: { winId: string }) {
       style={style}
       onMouseDown={() => dispatch({ type: "FOCUS", id: winId })}
     >
-      <div className="os-window-titlebar" onMouseDown={startDrag} onDoubleClick={() => dispatch({ type: win.maximized ? "RESTORE" : "MAXIMIZE", id: winId })}>
+      <div className="os-window-titlebar" onMouseDown={startDrag} onDoubleClick={handleTitlebarDoubleClick}>
         <div className="os-window-title">
           <i className={`fa ${app.icon}`} />
           <span>{win.title}</span>
@@ -100,7 +106,7 @@ export function WindowChrome({ winId }: { winId: string }) {
           <button onClick={(e) => { e.stopPropagation(); dispatch({ type: "MINIMIZE", id: winId }); }} title="Minimize">
             <i className="fa fa-minus" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); dispatch({ type: win.maximized ? "RESTORE" : "MAXIMIZE", id: winId }); }} title="Maximize">
+          <button className="os-window-btn-maximize" onClick={(e) => { e.stopPropagation(); dispatch({ type: win.maximized ? "RESTORE" : "MAXIMIZE", id: winId }); }} title={win.maximized ? "Restore Down" : "Maximize"}>
             <i className={`fa ${win.maximized ? "fa-clone" : "fa-square-o"}`} />
           </button>
           <button className="close" onClick={(e) => { e.stopPropagation(); dispatch({ type: "CLOSE_WINDOW", id: winId }); }} title="Close">

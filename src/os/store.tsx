@@ -72,7 +72,7 @@ function cascadeOffset(windows: WindowState[]) {
   return { x: 80 + (n % 8) * 30, y: 60 + (n % 8) * 30 };
 }
 
-function reducer(state: OSState, action: OSAction): OSState {
+export function reducer(state: OSState, action: OSAction): OSState {
   switch (action.type) {
     case "BOOT_DONE":
       return { ...state, booted: true, bootProgress: 100 };
@@ -99,19 +99,28 @@ function reducer(state: OSState, action: OSAction): OSState {
           search: "",
         };
       }
+      const isMobile =
+        typeof window !== "undefined" &&
+        (window.innerWidth <= 768 || window.innerHeight <= 540);
       const size = defaultSize[action.appId] ?? { w: 700, h: 500 };
       const off = cascadeOffset(state.windows);
       const z = state.nextZ + 1;
+      const availW = typeof window !== "undefined" ? window.innerWidth : 1200;
+      const availH = typeof window !== "undefined" ? Math.max(300, window.innerHeight - 48) : 700;
+      const width = isMobile ? availW : Math.min(size.w, Math.max(280, availW - 20));
+      const height = isMobile ? availH : Math.min(size.h, Math.max(200, availH - 20));
+      const x = isMobile ? 0 : Math.max(0, Math.min(off.x, availW - width));
+      const y = isMobile ? 0 : Math.max(0, Math.min(off.y, availH - height));
       const win: WindowState = {
         id: newId("win"),
         appId: action.appId,
         title: action.title ?? action.appId,
-        x: off.x,
-        y: off.y,
-        width: size.w,
-        height: size.h,
+        x,
+        y,
+        width,
+        height,
         minimized: false,
-        maximized: false,
+        maximized: isMobile,
         z,
       };
       return {
@@ -146,14 +155,16 @@ function reducer(state: OSState, action: OSAction): OSState {
             const r = w.restore ?? { x: w.x, y: w.y, width: w.width, height: w.height };
             return { ...w, maximized: false, ...r, restore: undefined };
           }
+          const screenW = typeof window !== "undefined" ? window.innerWidth : 1200;
+          const screenH = typeof window !== "undefined" ? window.innerHeight - 48 : 700;
           return {
             ...w,
             maximized: true,
             restore: { x: w.x, y: w.y, width: w.width, height: w.height },
             x: 0,
             y: 0,
-            width: window.innerWidth,
-            height: window.innerHeight - 48,
+            width: screenW,
+            height: screenH,
           };
         }),
       };
@@ -176,20 +187,40 @@ function reducer(state: OSState, action: OSAction): OSState {
         windows: state.windows.map((w) => (w.id === action.id ? { ...w, z, minimized: false } : w)),
       };
     }
-    case "MOVE":
-      return {
-        ...state,
-        windows: state.windows.map((w) => (w.id === action.id ? { ...w, x: action.x, y: action.y } : w)),
-      };
-    case "RESIZE":
+    case "MOVE": {
+      const availW = typeof window !== "undefined" ? window.innerWidth : 1200;
+      const availH = typeof window !== "undefined" ? Math.max(300, window.innerHeight - 48) : 700;
       return {
         ...state,
         windows: state.windows.map((w) =>
           w.id === action.id
-            ? { ...w, width: Math.max(260, action.width), height: Math.max(180, action.height), x: action.x ?? w.x, y: action.y ?? w.y }
+            ? {
+                ...w,
+                x: Math.max(0, Math.min(action.x, availW - 60)),
+                y: Math.max(0, Math.min(action.y, availH - 40)),
+              }
             : w
         ),
       };
+    }
+    case "RESIZE": {
+      const availW = typeof window !== "undefined" ? window.innerWidth : 1200;
+      const availH = typeof window !== "undefined" ? Math.max(300, window.innerHeight - 48) : 700;
+      return {
+        ...state,
+        windows: state.windows.map((w) =>
+          w.id === action.id
+            ? {
+                ...w,
+                width: Math.min(availW, Math.max(260, action.width)),
+                height: Math.min(availH, Math.max(180, action.height)),
+                x: action.x !== undefined ? Math.max(0, action.x) : w.x,
+                y: action.y !== undefined ? Math.max(0, action.y) : w.y,
+              }
+            : w
+        ),
+      };
+    }
     case "SET_START":
       return { ...state, startOpen: action.open, widgetsOpen: action.open ? false : state.widgetsOpen, actionCenterOpen: action.open ? false : state.actionCenterOpen };
     case "SET_SEARCH":

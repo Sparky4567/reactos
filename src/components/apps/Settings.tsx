@@ -34,15 +34,17 @@ export function Settings() {
     <div className="app-settings">
       <aside className="settings-sidebar">
         <div className="settings-search"><i className="fa fa-search" /> <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find a setting" style={{ border: "none", background: "transparent", outline: "none", flex: 1, color: "inherit", fontSize: 12 }} /></div>
-        {sections.filter((s) => s.label.toLowerCase().includes(query.toLowerCase())).map((s) => (
-          <div
-            key={s.id}
-            className={`settings-nav-item ${section === s.id ? "active" : ""}`}
-            onClick={() => setSection(s.id)}
-          >
-            <i className={`fa ${s.icon}`} /> {s.label}
-          </div>
-        ))}
+        <div className="settings-nav-list">
+          {sections.filter((s) => s.label.toLowerCase().includes(query.toLowerCase())).map((s) => (
+            <div
+              key={s.id}
+              className={`settings-nav-item ${section === s.id ? "active" : ""}`}
+              onClick={() => setSection(s.id)}
+            >
+              <i className={`fa ${s.icon}`} /> {s.label}
+            </div>
+          ))}
+        </div>
       </aside>
       <main className="settings-main">
         {section === "system" && (

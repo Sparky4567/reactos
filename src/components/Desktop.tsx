@@ -123,7 +123,11 @@ export function Desktop() {
               className="desktop-icon"
               style={{ left: d.x, top: d.y }}
               onMouseDown={(e) => startDragIcon(e, d)}
-              onClick={() => { if (window.matchMedia("(pointer: coarse)").matches) dispatch({ type: "OPEN_APP", appId: d.appId }); }}
+              onClick={() => {
+                if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 768) {
+                  dispatch({ type: "OPEN_APP", appId: d.appId });
+                }
+              }}
               onDoubleClick={() => dispatch({ type: "OPEN_APP", appId: d.appId })}
               onContextMenu={(e) => onIconContextMenu(e, d)}
             >
