@@ -1,3 +1,4 @@
+import { IMAGE_EXT } from "@/gallery/images";
 import { useState } from "react";
 import { useOS } from "@/os/store";
 import { findNode, formatSize } from "@/os/fs";
@@ -26,6 +27,7 @@ export function FileExplorer() {
 
   const open = (n: { name: string; type: string }) => {
     if (n.type === "folder") navigate([...path, n.name]);
+    else if (IMAGE_EXT.test(n.name)) dispatch({ type: "OPEN_APP", appId: "gallery", filePath: [...path, n.name] });
     else setSelected(n.name);
   };
 
@@ -142,12 +144,12 @@ export function FileExplorer() {
                     onChange={(e) => setRenameValue(e.target.value)}
                     onBlur={() => commitRename(n.name)}
                     onKeyDown={(e) => { if (e.key === "Enter") commitRename(n.name); if (e.key === "Escape") setRenaming(null); }}
-                    style={{ width: "100%", fontSize: 12 }}
+                    style={{ width: "100%", fontSize: "0.75rem" }}
                   />
                 ) : (
                   <span className="explorer-label">{n.name}</span>
                 )}
-                {n.type === "file" && <span className="explorer-label" style={{ fontSize: 10, opacity: 0.6 }}>{formatSize(n.size)}</span>}
+                {n.type === "file" && <span className="explorer-label" style={{ fontSize: "0.625rem", opacity: 0.6 }}>{formatSize(n.size)}</span>}
               </div>
             ))}
             {items.length === 0 && <div className="explorer-empty">This folder is empty.</div>}

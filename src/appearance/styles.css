@@ -1,0 +1,192 @@
+/* Shared appearance tokens. Windows 11 keeps the original shell layout. */
+:root { --accent: #0067c0; --accent-soft: #0067c022; --shell-top: 0px; --shell-left: 0px; }
+html[data-style="ubuntu"][data-theme] { --accent: #e95420; --accent-soft: #e9542026; --shell-top: 36px; --shell-left: 76px; --total-taskbar-height: 0px; --logo-cutout: #e95420; }
+html[data-style="chromeos"][data-theme] { --accent: #2466b8; --accent-soft: #6ba6e733; --total-taskbar-height: calc(76px + var(--safe-bottom)); }
+html[data-style="ubuntu"][data-theme] body, html[data-style="ubuntu"][data-theme] #root { font-family: Ubuntu, Cantarell, "Noto Sans", system-ui, sans-serif; }
+html[data-style="chromeos"][data-theme] body, html[data-style="chromeos"][data-theme] #root { font-family: "Google Sans", "Noto Sans", system-ui, sans-serif; }
+html[data-theme="light"] { color-scheme: light; --surface: #f8f8f7; --surface-raised: #fff; --surface-sidebar: #ececea; --ink: #282828; --line: #00000016; }
+html[data-theme="dark"] { color-scheme: dark; --surface: #272727; --surface-raised: #343434; --surface-sidebar: #222; --ink: #f5f5f5; --line: #ffffff16; }
+.desktop-mark { display: inline-block; width: 1em; height: 1em; vertical-align: middle; }
+.boot-logo .desktop-mark { width: 96px; height: 96px; margin-bottom: 28px; color: #fff; }
+.boot-desktop-name { font-size: 1.3rem; font-weight: 500; margin-bottom: 32px; }
+html[data-style="ubuntu"][data-theme] .boot-screen { background: #2c1028; }
+html[data-style="chromeos"][data-theme] .boot-screen { background: #16253a; }
+html[data-style="chromeos"][data-theme] .boot-logo i { color: #b6d6ff; }
+html[data-style="ubuntu"][data-theme] .lock-screen { background: radial-gradient(ellipse at top right, #994257, transparent 65%), linear-gradient(135deg, #241134, #582052); }
+html[data-style="chromeos"][data-theme] .lock-screen { background: linear-gradient(135deg, #20374b, #56786a); }
+.appearance-loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: #24152a; color: #fff; font: 1rem system-ui; text-align: center; padding: 24px; }
+.appearance-loading-mark { width: 36px; height: 36px; border: 3px solid #ffffff30; border-top-color: #e95420; border-radius: 50%; animation: appearance-spin 1s linear infinite; }
+.appearance-loading button, .appearance-error button { color: inherit; background: #ffffff18; border: 1px solid #ffffff40; padding: 6px 12px; border-radius: 8px; }
+@keyframes appearance-spin { to { transform: rotate(360deg); } }
+.appearance-error { position: fixed; top: calc(var(--shell-top) + 10px); left: max(12px, var(--shell-left)); right: 12px; z-index: 5000; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; background: #7d2924; color: white; border: 1px solid #f8b4aa; border-radius: 10px; padding: 12px; font-size: .8125rem; }
+/* Appearance selection is available in both System and Personalization. */
+.appearance-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.appearance-option { padding: 6px; border: 2px solid var(--line, #8884); border-radius: 12px; background: transparent; color: inherit; text-align: left; min-width: 0; cursor: pointer; }
+.appearance-option:hover { background: var(--accent-soft); }
+.appearance-option.selected { border-color: var(--accent); background: var(--accent-soft); }
+.appearance-option:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.appearance-option-name { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: .8125rem; font-weight: 600; margin: 10px 4px 6px; }
+.appearance-option.selected .appearance-option-name i { color: var(--accent); }
+.appearance-option-description { display: block; font-size: .6875rem; line-height: 1.5; opacity: .75; margin: 0 4px 6px; }
+.appearance-save-state { font-size: .6875rem !important; opacity: .75; padding-top: 12px; }
+.appearance-save-state.has-error { color: #d13438; }
+.appearance-preview { display: block; height: 100px; border-radius: 7px; position: relative; overflow: hidden; }
+.preview-window { position: absolute; top: 23%; left: 26%; width: 59%; height: 55%; border-radius: 5px; background: #f9f9f9; box-shadow: 0 4px 8px #0004; padding: 18px 10px 6px; }
+.preview-window::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 12px; background: #e7e5e5; border-radius: 5px 5px 0 0; }
+.preview-window i { display: block; height: 3px; background: #b9b5b3; margin-bottom: 5px; border-radius: 2px; }
+.preview-window i:last-child { width: 50%; }
+.preview-dock { position: absolute; display: flex; align-items: center; justify-content: center; gap: 5px; background: #1d1726b8; }
+.preview-dock i { display: block; width: 8px; height: 8px; border-radius: 2px; background: #e7a45c; }
+.preview-dock i:nth-child(2) { background: #8ac3dc; }.preview-dock i:nth-child(3) { background: #d6a7d2; }.preview-dock i:nth-child(4) { background: #dce6a3; }
+.preview-ubuntu .preview-panel { position: absolute; top: 0; width: 100%; height: 9px; background: #201c25; }
+.preview-ubuntu .preview-dock { top: 9px; bottom: 0; width: 19px; flex-direction: column; }
+.preview-win11 .preview-dock { bottom: 0; width: 100%; height: 15px; background: #eff5ffe0; }
+.preview-chromeos .preview-dock { bottom: 5px; left: 22%; width: 56%; height: 17px; border-radius: 12px; background: #e1effacc; }
+.preview-chromeos .preview-window { border-radius: 9px; }.preview-chromeos .preview-window::before { border-radius: 9px 9px 0 0; background: #e0eaf2; }
+/* All apps share accent and focus treatment. */
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.seg button.active, .ac-toggle.on, .chatbot-settings-row button, .chatbot-input button) { background: var(--accent); border-color: var(--accent); color: white; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.settings-nav-item.active, .sidebar-item.active, .notes-list li.active) { background: var(--accent-soft); color: var(--ink); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.wall-tile.active, .gallery-thumbnail.selected) { border-color: var(--accent); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .chatbot-msg-user .chatbot-bubble { background: var(--accent-soft); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .chatbot-msg-assistant .chatbot-avatar { color: var(--accent); background: var(--accent-soft); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(button, input, select, textarea, a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) input { accent-color: var(--accent); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window { font-family: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); backdrop-filter: none; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-titlebar { min-height: 44px; height: auto; background: var(--surface-raised); border-bottom: 1px solid var(--line); padding: 6px 10px 6px 16px; gap: 8px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-title { font-size: .8125rem; font-weight: 600; min-width: 0; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-title span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-controls { gap: 6px; flex-shrink: 0; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-controls button { width: 28px; height: 28px; border-radius: 50%; background: #8882; font-size: .6875rem; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-controls button:hover { background: #8885; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.explorer-sidebar, .settings-sidebar, .notes-sidebar, .notes-pages) { background: var(--surface-sidebar); border-color: var(--line); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.settings-card, .widget) { background: var(--surface-raised); border: 1px solid var(--line); border-radius: 12px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.context-menu, .widgets-panel, .action-center, .toast) { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .desktop-icon-img { border-radius: 14px; background: #ffffff18; box-shadow: 0 3px 10px #0002; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .desktop-icon-label { font-weight: 500; }
+/* Ubuntu: dark top panel, left dock, application overview, Yaru-like headers. */
+html[data-style="ubuntu"][data-theme] .os-windows-layer { inset: var(--shell-top) 0 var(--total-taskbar-height) var(--shell-left); }
+html[data-style="ubuntu"][data-theme] .desktop-icons { inset: var(--shell-top) 0 var(--total-taskbar-height) var(--shell-left); }
+.ubuntu-panel { position: fixed; top: 0; left: 0; right: 0; height: var(--shell-top); z-index: 1200; background: #1c191e; color: #f7f5f6; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: .75rem; }
+.ubuntu-panel button { background: transparent; border: none; border-radius: 20px; color: inherit; height: 30px; padding: 0 12px; font: inherit; font-weight: 600; cursor: pointer; }
+.ubuntu-panel button:hover, .ubuntu-panel button.active { background: #ffffff20; }
+.ubuntu-panel-left, .ubuntu-panel-status { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ubuntu-active-app { font-weight: 600; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-dots { letter-spacing: 3px; padding-left: 10px; color: #ddd; }
+.ubuntu-panel-clock { position: absolute; left: 50%; transform: translateX(-50%); }
+.ubuntu-panel-clock span { margin-left: 8px; }
+.ubuntu-panel-status button { display: flex; align-items: center; gap: 12px; position: relative; }
+.ubuntu-notification-dot { width: 5px; height: 5px; background: #e95420; border-radius: 50%; }
+html[data-style="ubuntu"][data-theme] .taskbar { top: var(--shell-top); left: 0; bottom: var(--total-taskbar-height); right: auto; width: var(--shell-left); height: auto; padding: 12px 8px; border: 0; border-right: 1px solid #ffffff12; background: #211a27e8; color: white; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+html[data-style="ubuntu"][data-theme] .taskbar-left { order: 2; flex-direction: column; }
+html[data-style="ubuntu"][data-theme] .taskbar-left > :not(.start-btn) { display: none; }
+html[data-style="ubuntu"][data-theme] .start-btn { color: white; background: #e95420; border-radius: 16px; width: 48px; height: 48px; font-size: 1.75rem; }
+html[data-style="ubuntu"][data-theme] .taskbar-center { position: static; transform: none; flex: 1; flex-direction: column; justify-content: flex-start; gap: 10px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; min-height: 0; }
+html[data-style="ubuntu"][data-theme] .taskbar-right { display: none; }
+html[data-style="ubuntu"][data-theme] .taskbar-app { width: 56px; height: 52px; flex-shrink: 0; border-radius: 12px; font-size: 1.5rem; }
+html[data-style="ubuntu"][data-theme] .taskbar-app.active { background: #ffffff20; }
+html[data-style="ubuntu"][data-theme] .running-dot { left: 0; top: 24px; bottom: auto; width: 4px; height: 4px; background: #e95420; opacity: 1; }
+html[data-style="ubuntu"][data-theme] .taskbar-app.active .running-dot { width: 4px; height: 16px; top: 18px; }
+html[data-style="ubuntu"][data-theme] .taskbar-app .fa-folder-open { color: #e9b56c; }html[data-style="ubuntu"][data-theme] .taskbar-app .fa-globe { color: #a3caef; }html[data-style="ubuntu"][data-theme] .taskbar-app .fa-comments { color: #b7d8b3; }html[data-style="ubuntu"][data-theme] .taskbar-app .fa-picture-o { color: #d6b2df; }
+html[data-style="ubuntu"][data-theme] .os-window { border-radius: 12px; box-shadow: 0 14px 44px #0005; }
+html[data-style="ubuntu"][data-theme] .os-window-controls button.close { background: #e95420; color: white; }
+html[data-style="ubuntu"][data-theme] .start-menu { top: calc(var(--shell-top) + 20px); bottom: 20px; left: calc(var(--shell-left) + 24px); right: 24px; transform: none; width: auto; max-width: 1050px; max-height: none; margin: auto; border-radius: 22px; background: #25222bea; border: 1px solid #ffffff24; color: #fff; backdrop-filter: blur(28px); box-shadow: 0 24px 80px #0007; }
+html[data-style="ubuntu"][data-theme] .start-search { max-width: 520px; width: calc(100% - 48px); align-self: center; margin: 24px; padding: 12px 18px; border-radius: 24px; background: #ffffff12; border: 1px solid #ffffff20; }
+html[data-style="ubuntu"][data-theme] .start-pinned-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 18px; padding: 20px; }
+html[data-style="ubuntu"][data-theme] .start-tile { padding: 16px 8px; border-radius: 16px; }
+html[data-style="ubuntu"][data-theme] .start-tile-icon { width: 56px; height: 56px; border-radius: 16px; font-size: 1.75rem; background: #ffffff15; }
+html[data-style="ubuntu"][data-theme] .start-tile-name { font-size: .8125rem; }
+html[data-style="ubuntu"][data-theme] .start-recommended-section { display: none; }
+html[data-style="ubuntu"][data-theme] .start-footer { border-top-color: #ffffff16; padding: 16px 24px; }
+html[data-style="ubuntu"][data-theme] :is(.widgets-panel, .action-center) { top: calc(var(--shell-top) + 8px); bottom: auto; max-height: calc(100dvh - var(--shell-top) - 24px); margin: 0 8px; box-shadow: 0 12px 36px #0005; }
+html[data-style="ubuntu"][data-theme] .widgets-panel { left: var(--shell-left); }
+html[data-style="ubuntu"][data-theme] .toast-container { top: calc(var(--shell-top) + 12px); }
+/* ChromeOS: rounded floating shelf, launcher, cool surfaces and pill controls. */
+html[data-style="chromeos"][data-theme="light"] { --surface: #f2f6fc; --surface-raised: #fff; --surface-sidebar: #e5edf8; --ink: #1d293b; --line: #1d293b18; }
+html[data-style="chromeos"][data-theme="dark"] { --surface: #202a38; --surface-raised: #2c384a; --surface-sidebar: #1b2533; --ink: #e6edf7; --line: #bed5f520; --accent: #a8c7fa; --accent-soft: #a8c7fa25; }
+html[data-style="chromeos"][data-theme] .os-window { border-radius: 20px; box-shadow: 0 12px 38px #16243b40; }
+html[data-style="chromeos"][data-theme] .os-window-titlebar { background: var(--surface-sidebar); }
+html[data-style="chromeos"][data-theme] .os-window-controls button { border-radius: 50%; background: transparent; }
+html[data-style="chromeos"][data-theme] .os-window-controls button.close:hover { background: #da655b; color: white; }
+html[data-style="chromeos"][data-theme] .taskbar { left: 16px; right: 16px; bottom: calc(10px + var(--safe-bottom)); height: 56px; padding: 6px; border: 1px solid var(--line); border-radius: 30px; background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--ink); backdrop-filter: blur(24px); box-shadow: 0 4px 24px #16243b26; gap: 8px; }
+html[data-style="chromeos"][data-theme] .taskbar-left { gap: 4px; }
+html[data-style="chromeos"][data-theme] .taskbar-btn { border-radius: 50%; height: 42px; width: 42px; color: var(--ink); }
+html[data-style="chromeos"][data-theme] .start-btn { background: var(--accent-soft); font-size: 1.5rem; }
+html[data-style="chromeos"][data-theme] .taskbar-search { border-radius: 22px; min-width: 0; width: 40px; padding: 0; justify-content: center; height: 40px; }
+html[data-style="chromeos"][data-theme] .taskbar-search span { display: none; }
+html[data-style="chromeos"][data-theme] .taskbar-left > button:not(.start-btn) { display: none; }
+html[data-style="chromeos"][data-theme] .taskbar-center { position: static; transform: none; flex: 1; min-width: 0; justify-content: center; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+html[data-style="chromeos"][data-theme] .taskbar-app { flex-shrink: 0; border-radius: 50%; height: 42px; width: 42px; font-size: 1.35rem; }
+html[data-style="chromeos"][data-theme] .taskbar-app.active { background: var(--accent-soft); }
+html[data-style="chromeos"][data-theme] .taskbar-app .fa-folder-open { color: #5e9fea; }html[data-style="chromeos"][data-theme] .taskbar-app .fa-chrome { color: #56ae84; }html[data-style="chromeos"][data-theme] .taskbar-app .fa-picture-o { color: #d48ac1; }
+html[data-style="chromeos"][data-theme] .taskbar-app.active .running-dot { width: 5px; height: 3px; border-radius: 3px; }
+html[data-style="chromeos"][data-theme] .taskbar-right { flex-shrink: 0; border-radius: 24px; padding: 2px 6px; background: var(--accent-soft); }
+html[data-style="chromeos"][data-theme] .taskbar-clock { font-weight: 600; }
+html[data-style="chromeos"][data-theme] .taskbar-tray button:first-child, html[data-style="chromeos"][data-theme] .taskbar-showdesktop { display: none; }
+html[data-style="chromeos"][data-theme] .start-menu { left: 16px; bottom: var(--total-taskbar-height); transform: none; width: 620px; max-width: calc(100vw - 32px); border-radius: 24px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 16px 64px #16243b44; }
+html[data-style="chromeos"][data-theme] .start-search { border-radius: 28px; padding: 14px 18px; background: var(--surface-raised); border-color: var(--line); }
+html[data-style="chromeos"][data-theme] .start-pinned-grid { gap: 12px; padding: 12px 4px; }
+html[data-style="chromeos"][data-theme] .start-tile { border-radius: 18px; }
+html[data-style="chromeos"][data-theme] .start-tile-icon { border-radius: 50%; background: var(--accent-soft); width: 42px; height: 42px; }
+html[data-style="chromeos"][data-theme] .start-footer { background: var(--surface-sidebar); border-color: var(--line); }
+html[data-style="chromeos"][data-theme] :is(.action-center, .widgets-panel) { top: auto; bottom: var(--total-taskbar-height); max-height: calc(100dvh - var(--total-taskbar-height) - 16px); width: 380px; border-radius: 28px; margin: 0 12px; box-shadow: 0 12px 38px #16243b44; }
+html[data-style="chromeos"][data-theme] .ac-toggle { border-radius: 24px; }
+html[data-style="chromeos"][data-theme="dark"] .ac-toggle.on { color: #152d4b; }
+html[data-style="chromeos"][data-theme] .settings-card { border-radius: 20px; }
+html[data-style="chromeos"][data-theme="dark"] :is(.chatbot-input button, .chatbot-settings-row button, .seg button.active) { color: #152d4b; }
+/* Compact workspaces keep controls reachable without a vertical dock. */
+@media (max-width: 768px), (max-height: 540px) {
+  html[data-style="ubuntu"][data-theme] { --shell-left: 0px; --total-taskbar-height: calc(60px + var(--safe-bottom)); }
+  html[data-style="ubuntu"][data-theme] .taskbar { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: var(--total-taskbar-height); padding: 4px 8px var(--safe-bottom); flex-direction: row; gap: 8px; }
+  html[data-style="ubuntu"][data-theme] .taskbar-left { order: 0; }
+  html[data-style="ubuntu"][data-theme] .start-btn { width: 44px; height: 44px; border-radius: 12px; }
+  html[data-style="ubuntu"][data-theme] .taskbar-center { flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 6px; justify-content: flex-start; }
+  html[data-style="ubuntu"][data-theme] .taskbar-app { width: 44px; height: 44px; font-size: 1.25rem; }
+  html[data-style="ubuntu"][data-theme] .running-dot { top: auto; left: auto; bottom: 2px; }
+  html[data-style="ubuntu"][data-theme] .taskbar-app.active .running-dot { top: auto; left: auto; bottom: 2px; width: 12px; height: 3px; }
+  html[data-style="ubuntu"][data-theme] .desktop-icons { position: absolute; align-content: flex-start; }
+  html[data-style="ubuntu"][data-theme] .ubuntu-active-app, .workspace-dots { display: none; }
+  .ubuntu-panel { padding: 0 4px; }.ubuntu-panel button { padding: 0 7px; }.ubuntu-panel-status, .ubuntu-panel-status button { gap: 7px; }
+  .ubuntu-panel-clock { font-size: .6875rem; }.ubuntu-panel-clock span { margin-left: 3px; }
+  html[data-style="ubuntu"][data-theme] .start-menu { left: 8px; right: 8px; top: calc(var(--shell-top) + 8px); bottom: calc(var(--total-taskbar-height) + 8px); border-radius: 18px; }
+  html[data-style="ubuntu"][data-theme] .start-pinned-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; padding: 4px; }
+  html[data-style="ubuntu"][data-theme] .start-tile-icon { width: 40px; height: 40px; font-size: 1.25rem; }
+  html[data-style="ubuntu"][data-theme] .start-search { margin: 12px; width: calc(100% - 24px); }
+  html[data-style="ubuntu"][data-theme] :is(.widgets-panel, .action-center) { width: calc(100% - 16px); max-height: calc(100dvh - var(--shell-top) - var(--total-taskbar-height) - 16px); }
+  :is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window { border-radius: 0; }
+  html[data-style="chromeos"][data-theme] .taskbar { left: 8px; right: 8px; gap: 4px; }
+  html[data-style="chromeos"][data-theme] .taskbar-search, html[data-style="chromeos"][data-theme] .taskbar-tray, html[data-style="chromeos"][data-theme] .taskbar-notif-btn { display: none; }
+  html[data-style="chromeos"][data-theme] .taskbar-center { justify-content: flex-start; gap: 4px; }
+  html[data-style="chromeos"][data-theme] .taskbar-right { padding: 4px; }.taskbar-clock { white-space: nowrap; }
+  html[data-style="chromeos"][data-theme] :is(.action-center, .widgets-panel) { width: calc(100% - 24px); max-height: calc(100dvh - var(--total-taskbar-height) - 16px); }
+  .appearance-options { grid-template-columns: 1fr; }.appearance-option { display: grid; grid-template-columns: 110px 1fr; column-gap: 10px; align-items: center; }.appearance-preview { grid-row: span 2; height: 80px; }.appearance-option-name { margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .appearance-loading-mark { animation: none; } }
+
+html[data-style="win11"][data-theme="dark"] .taskbar { background: rgba(32,32,32,.9); border-color: #ffffff1a; color: #fff; }
+
+@media (max-width: 768px), (max-height: 540px) {
+  .os-window-controls .os-window-btn-maximize { display: none; }
+  .ubuntu-panel-date { display: none; }
+}
+@media (max-width: 480px) {
+  .ubuntu-panel-status > button:first-child, .ubuntu-panel-status .fa-battery-three-quarters { display: none; }
+}
+@media (min-width: 769px) and (max-width: 1100px) {
+  html[data-style="win11"] .taskbar-search { min-width: 36px; width: 36px; padding: 0; justify-content: center; }
+  html[data-style="win11"] .taskbar-search span { display: none; }
+}
+@media (max-width: 768px), (max-height: 540px) {
+  .ubuntu-panel { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px; }
+  .ubuntu-panel .ubuntu-panel-clock { position: static; transform: none; min-width: 0; width: 100%; padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .6875rem; }
+  .ubuntu-panel-clock span { margin-left: 0; }
+}
+/* Terminal styling follows the selected desktop while retaining readable contrast. */
+html[data-style="ubuntu"][data-theme] .app-terminal { background: #300a24; color: #f2ecee; font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace; }
+html[data-style="ubuntu"][data-theme] .terminal-prompt { color: #8ae234; }
+html[data-style="chromeos"][data-theme] .app-terminal { background: #18212e; color: #e0e9f7; font-family: "Noto Sans Mono", monospace; }
+.terminal-line { overflow-wrap: anywhere; }
+.terminal-input-row { margin: 0; flex-shrink: 0; }
+.terminal-input-row input { min-width: 0; }
+.terminal-run { color: inherit; background: transparent; border: 1px solid #ffffff30; border-radius: 5px; padding: 4px 10px; flex-shrink: 0; }
+.terminal-input-row .terminal-prompt { max-width: 70%; overflow-wrap: anywhere; white-space: normal; }
+@media (max-width: 768px) { .terminal-input-row .terminal-prompt { max-width: 100%; } }

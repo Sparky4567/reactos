@@ -13,6 +13,7 @@ const makeInitialState = (): OSState => ({
   actionCenterOpen: false,
   contextMenu: null,
   notifications: [],
+  desktopStyle: "win11",
   theme: "dark",
   wallpaper: "default",
   locked: false,
@@ -129,5 +130,30 @@ describe("OS Reducer - Window Sizing & Positioning", () => {
     const restoredState = reducer(maxState, { type: "MAXIMIZE", id: winId });
     const restoredWin = restoredState.windows[0]!;
     expect(restoredWin.maximized).toBe(false);
+  });
+});
+
+describe('Gallery file opening', () => {
+  it('passes the selected image path into a new or existing gallery window', () => {
+    const first = reducer(makeInitialState(), { type: 'OPEN_APP', appId: 'gallery', filePath: ['Pictures', 'first.png'] });
+    expect(first.windows[0]!.filePath).toEqual(['Pictures', 'first.png']);
+    const second = reducer(first, { type: 'OPEN_APP', appId: 'gallery', filePath: ['Desktop', 'second.jpg'] });
+    expect(second.windows).toHaveLength(1);
+    expect(second.windows[0]!.filePath).toEqual(['Desktop', 'second.jpg']);
+  });
+});
+
+describe('Desktop appearance window bounds', () => {
+  it('reflows open windows and restore bounds when changing desktop styles', () => {
+    (globalThis as any).window = { innerWidth: 1024, innerHeight: 768 };
+    let state = reducer(makeInitialState(), { type: 'OPEN_APP', appId: 'gallery' });
+    state = reducer(state, { type: 'MAXIMIZE', id: state.windows[0]!.id });
+    state = reducer(state, { type: 'APPLY_APPEARANCE', preferences: { desktopStyle: 'ubuntu', theme: 'light', wallpaper: 'linear-gradient(red, blue)' } });
+    expect(state.desktopStyle).toBe('ubuntu');
+    expect(state.windows[0]!.width).toBeLessThanOrEqual(948);
+    expect(state.windows[0]!.restore!.x + state.windows[0]!.restore!.width).toBeLessThanOrEqual(948);
+    const next = reducer(state, { type: 'OPEN_APP', appId: 'settings' });
+    expect(next.windows[1]!.x + next.windows[1]!.width).toBeLessThanOrEqual(948);
+    expect(next.windows[1]!.y + next.windows[1]!.height).toBeLessThanOrEqual(732);
   });
 });

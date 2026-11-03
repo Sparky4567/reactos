@@ -1,3 +1,4 @@
+import { DesktopMark } from "./DesktopMark";
 import { useEffect } from "react";
 import { useOS } from "@/os/store";
 
@@ -20,8 +21,9 @@ export function BootScreen() {
   return (
     <div className="boot-screen">
       <div className="boot-logo">
-        <i className="fa fa-windows" />
+        <DesktopMark style={state.desktopStyle} />
       </div>
+      <div className="boot-desktop-name">{state.desktopStyle === "ubuntu" ? "Ubuntu desktop" : state.desktopStyle === "chromeos" ? "ChromeOS desktop" : "Windows desktop"}</div>
       <div className="boot-spinner">
         <div className="boot-dot" style={{ transform: `rotate(${state.bootProgress * 3.6}deg)` }} />
       </div>

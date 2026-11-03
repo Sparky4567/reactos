@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useOS } from "@/os/store";
-import { APP_MAP } from "@/os/apps";
+import { APP_MAP, presentApp } from "@/os/apps";
 
 export function WindowChrome({ winId }: { winId: string }) {
   const { state, dispatch } = useOS();
   const win = state.windows.find((w) => w.id === winId)!;
-  const app = APP_MAP[win.appId]!;
+  const app = presentApp(APP_MAP[win.appId]!, state.desktopStyle);
   const active = state.activeId === winId;
 
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
@@ -100,7 +100,7 @@ export function WindowChrome({ winId }: { winId: string }) {
       <div className="os-window-titlebar" onMouseDown={startDrag} onDoubleClick={handleTitlebarDoubleClick}>
         <div className="os-window-title">
           <i className={`fa ${app.icon}`} />
-          <span>{win.title}</span>
+          <span>{win.title === win.appId ? app.name : win.title}</span>
         </div>
         <div className="os-window-controls">
           <button onClick={(e) => { e.stopPropagation(); dispatch({ type: "MINIMIZE", id: winId }); }} title="Minimize">

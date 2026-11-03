@@ -195,9 +195,9 @@ export function Browser({ windowId }: { windowId?: string }) {
           <button title="More" onClick={() => setMenuOpen((v) => !v)}><i className="fa fa-ellipsis-h" /></button>
           {menuOpen && (
             <div style={{ position: "absolute", right: 0, top: 32, background: "rgba(40,40,40,0.95)", borderRadius: 6, padding: 4, minWidth: 140, zIndex: 10, border: "1px solid rgba(255,255,255,0.1)" }}>
-              <div style={{ padding: "6px 10px", cursor: "pointer", color: "#fff", fontSize: 12 }} onClick={() => { newTab(); setMenuOpen(false); }}>New tab</div>
-              <div style={{ padding: "6px 10px", cursor: "pointer", color: "#fff", fontSize: 12 }} onClick={() => { go("https://www.bing.com"); setMenuOpen(false); }}>Home</div>
-              <div style={{ padding: "6px 10px", cursor: "pointer", color: "#fff", fontSize: 12 }} onClick={() => { window.open(url, "_blank"); setMenuOpen(false); }}>Open in new window</div>
+              <div style={{ padding: "6px 10px", cursor: "pointer", color: "#fff", fontSize: "0.75rem" }} onClick={() => { newTab(); setMenuOpen(false); }}>New tab</div>
+              <div style={{ padding: "6px 10px", cursor: "pointer", color: "#fff", fontSize: "0.75rem" }} onClick={() => { go("https://www.bing.com"); setMenuOpen(false); }}>Home</div>
+              <div style={{ padding: "6px 10px", cursor: "pointer", color: "#fff", fontSize: "0.75rem" }} onClick={() => { window.open(url, "_blank"); setMenuOpen(false); }}>Open in new window</div>
             </div>
           )}
         </div>

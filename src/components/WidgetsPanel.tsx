@@ -4,7 +4,7 @@ import { useOS } from "@/os/store";
 export function WidgetsPanel() {
   const { dispatch } = useOS();
   const [todos, setTodos] = useState<{ id: number; text: string; done: boolean }[]>([
-    { id: 1, text: "Finish Windows clone", done: false },
+    { id: 1, text: "Explore the desktop", done: false },
     { id: 2, text: "Add more apps", done: false },
     { id: 3, text: "Set up React", done: true },
   ]);
@@ -57,7 +57,7 @@ export function WidgetsPanel() {
           <div className="news-item">
             <div className="news-thumb" />
             <div>
-              <div className="news-headline">Windows 11 24H2 rollout continues</div>
+              <div className="news-headline">Make this workspace your own</div>
               <div className="news-meta">OS · 1d ago</div>
             </div>
           </div>
@@ -65,13 +65,13 @@ export function WidgetsPanel() {
         <div className="widget todo">
           <div className="widget-title">To Do</div>
           <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
-            <input value={todoInput} onChange={(e) => setTodoInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && todoInput.trim()) { setTodos((t) => [...t, { id: Date.now(), text: todoInput.trim(), done: false }]); setTodoInput(""); } }} placeholder="Add task" style={{ flex: 1, fontSize: 12, padding: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.1)" }} />
+            <input value={todoInput} onChange={(e) => setTodoInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && todoInput.trim()) { setTodos((t) => [...t, { id: Date.now(), text: todoInput.trim(), done: false }]); setTodoInput(""); } }} placeholder="Add task" style={{ flex: 1, fontSize: "0.75rem", padding: 4, borderRadius: 4, border: "1px solid rgba(0,0,0,0.1)" }} />
           </div>
           {todos.map((t) => (
             <div key={t.id} className="todo-item">
               <input type="checkbox" checked={t.done} onChange={() => setTodos((ts) => ts.map((x) => x.id === t.id ? { ...x, done: !x.done } : x))} />
               <span style={{ textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.6 : 1 }}>{t.text}</span>
-              <button onClick={() => setTodos((ts) => ts.filter((x) => x.id !== t.id))} style={{ marginLeft: "auto", border: "none", background: "transparent", cursor: "pointer", fontSize: 10, opacity: 0.5 }}>×</button>
+              <button onClick={() => setTodos((ts) => ts.filter((x) => x.id !== t.id))} style={{ marginLeft: "auto", border: "none", background: "transparent", cursor: "pointer", fontSize: "0.625rem", opacity: 0.5 }}>×</button>
             </div>
           ))}
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useOS } from "@/os/store";
-import { APP_MAP } from "@/os/apps";
+import { APP_MAP, presentApp } from "@/os/apps";
 import { WindowManager } from "./Window";
 
 export function Desktop() {
@@ -13,7 +13,7 @@ export function Desktop() {
   useEffect(() => {
     const onCtx = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest(".os-window, .taskbar, .start-menu, .widgets-panel, .action-center, .context-menu")) return;
+      if (target.closest(".os-window, .taskbar, .ubuntu-panel, .start-menu, .widgets-panel, .action-center, .context-menu")) return;
       // desktop icon right click handled separately
       if (target.closest(".desktop-icon")) return;
       e.preventDefault();
@@ -112,10 +112,10 @@ export function Desktop() {
   };
 
   return (
-    <div className="os-desktop" style={wallpaperStyle} data-theme={state.theme}>
+    <div className="os-desktop" style={wallpaperStyle} data-theme={state.theme} data-style={state.desktopStyle}>
       <div className="desktop-icons">
         {(sortBy === "name" ? [...state.desktopIcons].sort((a, b) => a.label.localeCompare(b.label)) : state.desktopIcons).map((d) => {
-          const app = APP_MAP[d.appId]!;
+          const app = presentApp(APP_MAP[d.appId]!, state.desktopStyle);
           if (d.x < 0) return null;
           return (
             <div
@@ -131,8 +131,8 @@ export function Desktop() {
               onDoubleClick={() => dispatch({ type: "OPEN_APP", appId: d.appId })}
               onContextMenu={(e) => onIconContextMenu(e, d)}
             >
-              <div className="desktop-icon-img" style={{ fontSize: iconSize === "large" ? 56 : 40 }}><i className={`fa ${app.icon}`} /></div>
-              <div className="desktop-icon-label" style={{ fontSize: iconSize === "large" ? 14 : 12 }}>{d.label}</div>
+              <div className="desktop-icon-img" style={{ fontSize: iconSize === "large" ? "3.5rem" : state.desktopStyle === "win11" ? "2.5rem" : "1.75rem" }}><i className={`fa ${app.icon}`} /></div>
+              <div className="desktop-icon-label" style={{ fontSize: iconSize === "large" ? "0.875rem" : "0.75rem" }}>{app.name}</div>
             </div>
           );
         })}

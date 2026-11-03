@@ -1,9 +1,8 @@
-import { createContext, useContext, useEffect, useReducer, type ReactNode } from "react";
+import { useAppearance } from "@/appearance/context";
+import { DEFAULT_APPEARANCE, workspace } from "@/appearance/preferences";
+import { createContext, useCallback, useContext, useEffect, useReducer, type ReactNode } from "react";
 import type { OSState, OSAction, WindowState, DesktopIcon } from "./types";
 import { DEFAULT_FS, cloneFS, createFolder, createFile, deleteNode, renameNode, writeFile, moveNode } from "./fs";
-
-const DEFAULT_WALLPAPER =
-  "linear-gradient(135deg, #2b5876 0%, #4e4376 50%, #1a1a2e 100%)";
 
 const initialIcons: DesktopIcon[] = [
   { id: "di-explorer", appId: "explorer", label: "File Explorer", x: 24, y: 24 },
@@ -13,6 +12,7 @@ const initialIcons: DesktopIcon[] = [
   { id: "di-settings", appId: "settings", label: "Settings", x: 24, y: 408 },
   { id: "di-terminal", appId: "terminal", label: "Terminal", x: 120, y: 24 },
   { id: "di-notes", appId: "notes", label: "OneNote", x: 24, y: 600 },
+  { id: "di-gallery", appId: "gallery", label: "Gallery", x: 120, y: 216 },
   { id: "di-chatbot", appId: "chatbot", label: "Chatbot", x: 120, y: 120 },
 ];
 
@@ -43,8 +43,7 @@ const initialState: OSState = {
   actionCenterOpen: false,
   contextMenu: null,
   notifications: [],
-  theme: "dark",
-  wallpaper: DEFAULT_WALLPAPER,
+  ...DEFAULT_APPEARANCE,
   locked: true,
   booted: false,
   bootProgress: 0,
@@ -64,6 +63,7 @@ const defaultSize: Record<string, { w: number; h: number }> = {
   settings: { w: 820, h: 620 },
   terminal: { w: 760, h: 480 },
   notes: { w: 900, h: 620 },
+  gallery: { w: 1000, h: 680 },
   chatbot: { w: 920, h: 640 },
 };
 
@@ -93,7 +93,7 @@ export function reducer(state: OSState, action: OSAction): OSState {
           nextZ: z,
           activeId: anyExisting.id,
           windows: state.windows.map((w) =>
-            w.id === anyExisting.id ? { ...w, minimized: false, z } : w
+            w.id === anyExisting.id ? { ...w, minimized: false, z, ...(action.filePath ? { filePath: action.filePath } : {}) } : w
           ),
           startOpen: false,
           search: "",
@@ -105,8 +105,9 @@ export function reducer(state: OSState, action: OSAction): OSState {
       const size = defaultSize[action.appId] ?? { w: 700, h: 500 };
       const off = cascadeOffset(state.windows);
       const z = state.nextZ + 1;
-      const availW = typeof window !== "undefined" ? window.innerWidth : 1200;
-      const availH = typeof window !== "undefined" ? Math.max(300, window.innerHeight - 48) : 700;
+      const area = workspace(state.desktopStyle, typeof window !== "undefined" ? window.innerWidth : 1200, typeof window !== "undefined" ? window.innerHeight : 748);
+      const availW = area.width;
+      const availH = area.height;
       const width = isMobile ? availW : Math.min(size.w, Math.max(280, availW - 20));
       const height = isMobile ? availH : Math.min(size.h, Math.max(200, availH - 20));
       const x = isMobile ? 0 : Math.max(0, Math.min(off.x, availW - width));
@@ -114,6 +115,7 @@ export function reducer(state: OSState, action: OSAction): OSState {
       const win: WindowState = {
         id: newId("win"),
         appId: action.appId,
+        filePath: action.filePath,
         title: action.title ?? action.appId,
         x,
         y,
@@ -155,8 +157,9 @@ export function reducer(state: OSState, action: OSAction): OSState {
             const r = w.restore ?? { x: w.x, y: w.y, width: w.width, height: w.height };
             return { ...w, maximized: false, ...r, restore: undefined };
           }
-          const screenW = typeof window !== "undefined" ? window.innerWidth : 1200;
-          const screenH = typeof window !== "undefined" ? window.innerHeight - 48 : 700;
+          const area = workspace(state.desktopStyle, typeof window !== "undefined" ? window.innerWidth : 1200, typeof window !== "undefined" ? window.innerHeight : 748);
+          const screenW = area.width;
+          const screenH = area.height;
           return {
             ...w,
             maximized: true,
@@ -188,8 +191,9 @@ export function reducer(state: OSState, action: OSAction): OSState {
       };
     }
     case "MOVE": {
-      const availW = typeof window !== "undefined" ? window.innerWidth : 1200;
-      const availH = typeof window !== "undefined" ? Math.max(300, window.innerHeight - 48) : 700;
+      const area = workspace(state.desktopStyle, typeof window !== "undefined" ? window.innerWidth : 1200, typeof window !== "undefined" ? window.innerHeight : 748);
+      const availW = area.width;
+      const availH = area.height;
       return {
         ...state,
         windows: state.windows.map((w) =>
@@ -204,8 +208,9 @@ export function reducer(state: OSState, action: OSAction): OSState {
       };
     }
     case "RESIZE": {
-      const availW = typeof window !== "undefined" ? window.innerWidth : 1200;
-      const availH = typeof window !== "undefined" ? Math.max(300, window.innerHeight - 48) : 700;
+      const area = workspace(state.desktopStyle, typeof window !== "undefined" ? window.innerWidth : 1200, typeof window !== "undefined" ? window.innerHeight : 748);
+      const availW = area.width;
+      const availH = area.height;
       return {
         ...state,
         windows: state.windows.map((w) =>
@@ -235,6 +240,17 @@ export function reducer(state: OSState, action: OSAction): OSState {
       return { ...state, notifications: [action.n, ...state.notifications].slice(0, 8) };
     case "DISMISS_NOTIFICATION":
       return { ...state, notifications: state.notifications.filter((n) => n.id !== action.id) };
+    case "APPLY_APPEARANCE": {
+      const area = workspace(action.preferences.desktopStyle, typeof window !== "undefined" ? window.innerWidth : 1200, typeof window !== "undefined" ? window.innerHeight : 748);
+      return { ...state, ...action.preferences, windows: state.windows.map(w => ({ ...w,
+        width: Math.min(w.width, area.width), height: Math.min(w.height, area.height),
+        x: Math.max(0, Math.min(w.x, area.width - Math.min(w.width, area.width))),
+        y: Math.max(0, Math.min(w.y, area.height - Math.min(w.height, area.height))),
+        restore: w.restore ? { width: Math.min(w.restore.width, area.width), height: Math.min(w.restore.height, area.height), x: Math.max(0, Math.min(w.restore.x, area.width - Math.min(w.restore.width, area.width))), y: Math.max(0, Math.min(w.restore.y, area.height - Math.min(w.restore.height, area.height))) } : undefined,
+      })) };
+    }
+    case "SET_DESKTOP_STYLE":
+      return { ...state, desktopStyle: action.desktopStyle };
     case "SET_THEME":
       return { ...state, theme: action.theme };
     case "SET_WALLPAPER":
@@ -246,6 +262,8 @@ export function reducer(state: OSState, action: OSAction): OSState {
       };
     case "REMOVE_DESKTOP_ICON":
       return { ...state, desktopIcons: state.desktopIcons.filter((d) => d.id !== action.id) };
+    case "FS_REPLACE_ROOT":
+      return { ...state, fs: action.fs };
     case "FS_CREATE_FOLDER":
       return { ...state, fs: createFolder(state.fs, action.path, action.name) };
     case "FS_CREATE_FILE":
@@ -268,14 +286,22 @@ export function reducer(state: OSState, action: OSAction): OSState {
 const Ctx = createContext<{ state: OSState; dispatch: React.Dispatch<OSAction> } | null>(null);
 
 export function OSProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const { preferences, update } = useAppearance();
+  const [state, baseDispatch] = useReducer(reducer, initialState);
+  const dispatch = useCallback((action: OSAction) => {
+    if (action.type === "SET_DESKTOP_STYLE") update({ desktopStyle: action.desktopStyle });
+    if (action.type === "SET_THEME") update({ theme: action.theme });
+    if (action.type === "SET_WALLPAPER") update({ wallpaper: action.wallpaper });
+    baseDispatch(action);
+  }, [update]);
+  useEffect(() => { baseDispatch({ type: "APPLY_APPEARANCE", preferences }); }, [preferences]);
   useEffect(() => {
     try { localStorage.setItem("reactos.fs", JSON.stringify(state.fs)); } catch {}
   }, [state.fs]);
   useEffect(() => {
     try { localStorage.setItem("reactos.password", state.password); } catch {}
   }, [state.password]);
-  return <Ctx.Provider value={{ state, dispatch }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ state: { ...state, ...preferences }, dispatch }}>{children}</Ctx.Provider>;
 }
 
 export function useOS() {

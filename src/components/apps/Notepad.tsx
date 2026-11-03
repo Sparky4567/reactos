@@ -172,7 +172,7 @@ export function Notepad({ windowId }: { windowId?: string }) {
       <textarea
         ref={taRef}
         className="notepad-textarea"
-        style={{ whiteSpace: wrap ? "pre-wrap" : "pre", overflowX: wrap ? "hidden" : "auto", fontSize: `${14 * (zoom / 100)}px` }}
+        style={{ whiteSpace: wrap ? "pre-wrap" : "pre", overflowX: wrap ? "hidden" : "auto", fontSize: `${0.875 * (zoom / 100)}rem` }}
         value={text}
         onChange={(e) => setText(e.target.value)}
         spellCheck={false}

@@ -1,8 +1,10 @@
+import type { AppearancePreferences, DesktopStyle } from "@/appearance/preferences";
 export type Theme = "light" | "dark";
 
 export interface WindowState {
   id: string;
   appId: string;
+  filePath?: string[];
   title: string;
   x: number;
   y: number;
@@ -57,6 +59,7 @@ export interface OSState {
   actionCenterOpen: boolean;
   contextMenu: { x: number; y: number; items: MenuItem[] } | null;
   notifications: NotificationItem[];
+  desktopStyle: DesktopStyle;
   theme: Theme;
   wallpaper: string;
   locked: boolean;
@@ -72,7 +75,7 @@ export type OSAction =
   | { type: "SET_BOOT_PROGRESS"; value: number }
   | { type: "UNLOCK" }
   | { type: "LOCK" }
-  | { type: "OPEN_APP"; appId: string; title?: string }
+  | { type: "OPEN_APP"; appId: string; title?: string; filePath?: string[] }
   | { type: "CLOSE_WINDOW"; id: string }
   | { type: "MINIMIZE"; id: string }
   | { type: "MAXIMIZE"; id: string }
@@ -87,11 +90,14 @@ export type OSAction =
   | { type: "SET_CONTEXT_MENU"; menu: OSState["contextMenu"] }
   | { type: "PUSH_NOTIFICATION"; n: NotificationItem }
   | { type: "DISMISS_NOTIFICATION"; id: string }
+  | { type: "APPLY_APPEARANCE"; preferences: AppearancePreferences }
+  | { type: "SET_DESKTOP_STYLE"; desktopStyle: DesktopStyle }
   | { type: "SET_THEME"; theme: Theme }
   | { type: "SET_WALLPAPER"; wallpaper: string }
   | { type: "SET_PASSWORD"; password: string }
   | { type: "MOVE_DESKTOP_ICON"; id: string; x: number; y: number }
   | { type: "REMOVE_DESKTOP_ICON"; id: string }
+  | { type: "FS_REPLACE_ROOT"; fs: FSNode }
   | { type: "FS_CREATE_FOLDER"; path: string[]; name: string }
   | { type: "FS_CREATE_FILE"; path: string[]; name: string; content?: string }
   | { type: "FS_DELETE"; path: string[] }

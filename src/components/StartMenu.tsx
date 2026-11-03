@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useOS } from "@/os/store";
-import { APPS } from "@/os/apps";
+import { APPS, presentApp } from "@/os/apps";
 
 export function StartMenu() {
   const { state, dispatch } = useOS();
+  const apps = APPS.map(app => presentApp(app, state.desktopStyle));
   const [pinned] = useState(APPS.map((a) => a.id));
   const [showAll, setShowAll] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
   const filtered = state.search
-    ? APPS.filter((a) => a.name.toLowerCase().includes(state.search.toLowerCase()))
-    : APPS;
+    ? apps.filter((a) => a.name.toLowerCase().includes(state.search.toLowerCase()))
+    : apps;
 
   const user = "User";
 
@@ -43,12 +44,12 @@ export function StartMenu() {
           <>
             <div className="start-section">
               <div className="start-section-header">
-                <span>Pinned</span>
+                <span>{state.desktopStyle === "ubuntu" ? "Applications" : state.desktopStyle === "chromeos" ? "Your apps" : "Pinned"}</span>
                 <button onClick={() => setShowAll((v) => !v)}>{showAll ? "Pinned" : "All apps"} <i className={`fa ${showAll ? "fa-chevron-down" : "fa-chevron-right"}`} /></button>
               </div>
               <div className="start-pinned-grid">
                 {pinned.map((id) => {
-                  const a = APPS.find((x) => x.id === id)!;
+                  const a = apps.find((x) => x.id === id)!;
                   return (
                     <div key={id} className="start-tile" onClick={() => dispatch({ type: "OPEN_APP", appId: id })}>
                       <div className="start-tile-icon"><i className={`fa ${a.icon}`} /></div>
@@ -59,7 +60,7 @@ export function StartMenu() {
               </div>
               {showAll && (
                 <div className="start-apps-grid" style={{ marginTop: 8 }}>
-                  {APPS.map((a) => (
+                  {apps.map((a) => (
                     <div key={`all-${a.id}`} className="start-app" onClick={() => dispatch({ type: "OPEN_APP", appId: a.id })}>
                       <div className="start-app-icon"><i className={`fa ${a.icon}`} /></div>
                       <div className="start-app-name">{a.name}</div>
@@ -68,15 +69,15 @@ export function StartMenu() {
                 </div>
               )}
             </div>
-            <div className="start-section">
+            <div className="start-section start-recommended-section">
               <div className="start-section-header">
                 <span>Recommended</span>
                 <button onClick={() => setShowMore((v) => !v)}>{showMore ? "Less" : "More"} <i className={`fa ${showMore ? "fa-chevron-down" : "fa-chevron-right"}`} /></button>
               </div>
               <div className="start-recommended">
-                <div className="start-rec-item" onClick={() => dispatch({ type: "OPEN_APP", appId: "notepad" })}><i className="fa fa-file-text-o" /> Recently opened - Notepad</div>
+                <div className="start-rec-item" onClick={() => dispatch({ type: "OPEN_APP", appId: "notepad" })}><i className="fa fa-file-text-o" /> Text editor</div>
                 <div className="start-rec-item" onClick={() => dispatch({ type: "OPEN_APP", appId: "explorer" })}><i className="fa fa-folder" /> Quick access - Documents</div>
-                <div className="start-rec-item" onClick={() => dispatch({ type: "OPEN_APP", appId: "browser" })}><i className="fa fa-globe" /> Browsing history - Edge</div>
+                <div className="start-rec-item" onClick={() => dispatch({ type: "OPEN_APP", appId: "browser" })}><i className="fa fa-globe" /> Web browser</div>
                 {showMore && (
                   <>
                     <div className="start-rec-item" onClick={() => dispatch({ type: "OPEN_APP", appId: "calculator" })}><i className="fa fa-calculator" /> Calculator</div>

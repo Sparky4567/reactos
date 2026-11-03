@@ -1,4 +1,8 @@
 import { serve } from "bun";
+import { appearanceRoutes } from "./appearance/database";
+import { galleryRoutes } from "./gallery/database";
+import { ChatDatabase, chatStateRoutes } from "./chat/database";
+import { resolve } from "node:path";
 import index from "./index.html";
 import { Ollama } from "ollama-node";
 
@@ -28,12 +32,24 @@ function normalizeOllamaHost(input?: string | null): string {
   return h;
 }
 
+const chatDatabase = new ChatDatabase(process.env.CHAT_DB_PATH || resolve(import.meta.dir, "../data/chatbot.sqlite"));
+
+const gallery = galleryRoutes(chatDatabase.db);
+const appearance = appearanceRoutes(chatDatabase.db);
+
 const server = serve({
   port: getPort(),
   idleTimeout: 255,
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,
+
+    "/api/gallery/images": gallery.collection,
+    "/api/gallery/images/:id": gallery.item,
+
+    "/api/appearance": appearance,
+
+    "/api/chat/state": chatStateRoutes(chatDatabase),
 
     "/api/hello": {
       GET() {

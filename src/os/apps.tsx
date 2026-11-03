@@ -1,3 +1,5 @@
+import type { DesktopStyle } from "@/appearance/preferences";
+import { Gallery } from "@/components/apps/Gallery";
 import type { ComponentType } from "react";
 import { FileExplorer } from "@/components/apps/FileExplorer";
 import { Notepad } from "@/components/apps/Notepad";
@@ -16,6 +18,7 @@ export interface AppDef {
 }
 
 export const APPS: AppDef[] = [
+  { id: "gallery", name: "Gallery", icon: "fa-picture-o", component: Gallery },
   { id: "explorer", name: "File Explorer", icon: "fa-folder-open", component: FileExplorer },
   { id: "notepad", name: "Notepad", icon: "fa-file-text-o", component: Notepad },
   { id: "calculator", name: "Calculator", icon: "fa-calculator", component: Calculator },
@@ -27,3 +30,9 @@ export const APPS: AppDef[] = [
 ];
 
 export const APP_MAP = Object.fromEntries(APPS.map((a) => [a.id, a]));
+
+export function presentApp(app: AppDef, style: DesktopStyle): AppDef {
+  if (style === "win11") return app;
+  const names: Record<string, string> = { explorer: "Files", notepad: "Text Editor", browser: "Web Browser", notes: "Notes" };
+  return { ...app, name: names[app.id] || app.name, icon: app.id === "browser" ? (style === "chromeos" ? "fa-chrome" : "fa-globe") : app.icon };
+}

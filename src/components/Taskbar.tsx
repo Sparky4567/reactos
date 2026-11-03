@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useOS } from "@/os/store";
-import { APPS } from "@/os/apps";
+import { DesktopMark } from "./DesktopMark";
+import { APPS, presentApp } from "@/os/apps";
 
 export function Taskbar() {
   const { state, dispatch } = useOS();
@@ -12,8 +13,11 @@ export function Taskbar() {
     return () => clearInterval(t);
   }, []);
 
+  const apps = APPS.map(app => presentApp(app, state.desktopStyle));
+  const ubuntu = state.desktopStyle === "ubuntu";
+  const activeApp = apps.find(app => state.windows.some(w => w.id === state.activeId && w.appId === app.id));
   const runningApps = Array.from(new Set(state.windows.map((w) => w.appId)));
-  const pinned = ["explorer", "browser", "terminal", "notepad", "notes", "calculator", "settings"];
+  const pinned = ["explorer", "browser", "terminal", "gallery", "chatbot", "settings"];
 
   const formatTime = (d: Date) =>
     d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -21,14 +25,22 @@ export function Taskbar() {
     d.toLocaleDateString([], { month: "numeric", day: "numeric", year: "numeric" });
 
   return (
-    <div className="taskbar" onClick={(e) => e.stopPropagation()}>
+    <>
+    {ubuntu && <header className="ubuntu-panel" onClick={e => e.stopPropagation()}>
+      <div className="ubuntu-panel-left"><button className={state.startOpen ? "active" : ""} aria-expanded={state.startOpen} onClick={() => dispatch({ type: "SET_START", open: !state.startOpen })}>Activities <span className="workspace-dots">••</span></button><span className="ubuntu-active-app">{activeApp?.name || "Desktop"}</span></div>
+      <button className="ubuntu-panel-clock" onClick={() => dispatch({ type: "SET_ACTION_CENTER", open: !state.actionCenterOpen })}><span className="ubuntu-panel-date">{time.toLocaleDateString([], { month: "short", day: "numeric" })}</span> <span>{formatTime(time)}</span></button>
+      <div className="ubuntu-panel-status"><button aria-label="Open widgets" title="Widgets" onClick={() => dispatch({ type: "SET_WIDGETS", open: !state.widgetsOpen })}><i className="fa fa-th-large" /></button><button aria-label="System menu and notifications" aria-expanded={state.actionCenterOpen} onClick={() => dispatch({ type: "SET_ACTION_CENTER", open: !state.actionCenterOpen })}><i className="fa fa-wifi" /><i className="fa fa-volume-up" /><i className="fa fa-battery-three-quarters" /><i className="fa fa-angle-down" />{state.notifications.length > 0 && <span className="ubuntu-notification-dot" />}</button></div>
+    </header>}
+    <nav className="taskbar" aria-label={ubuntu ? "Application dock" : state.desktopStyle === "chromeos" ? "Application shelf" : "Taskbar"} onClick={(e) => e.stopPropagation()}>
       <div className="taskbar-left">
         <button
           className={`taskbar-btn start-btn ${state.startOpen ? "active" : ""}`}
           onClick={() => dispatch({ type: "SET_START", open: !state.startOpen })}
-          title="Start"
+          title={ubuntu ? "Show applications" : state.desktopStyle === "chromeos" ? "Launcher" : "Start"}
+          aria-label={ubuntu ? "Show applications" : state.desktopStyle === "chromeos" ? "Launcher" : "Start"}
+          aria-expanded={state.startOpen}
         >
-          <i className="fa fa-windows" />
+          <DesktopMark style={state.desktopStyle} />
         </button>
         <div className="taskbar-search" onClick={() => dispatch({ type: "SET_START", open: true })}>
           <i className="fa fa-search" />
@@ -45,7 +57,7 @@ export function Taskbar() {
 
       <div className="taskbar-center">
         {pinned.map((id) => {
-          const app = APPS.find((a) => a.id === id)!;
+          const app = apps.find((a) => a.id === id)!;
           const running = runningApps.includes(id);
           const active = state.windows.some((w) => w.appId === id && state.activeId === w.id);
           return (
@@ -80,11 +92,11 @@ export function Taskbar() {
         {runningApps
           .filter((id) => !pinned.includes(id))
           .map((id) => {
-            const app = APPS.find((a) => a.id === id)!;
+            const app = apps.find((a) => a.id === id)!;
             return (
               <button
                 key={`run-${id}`}
-                className="taskbar-app running active"
+                className={`taskbar-app running ${state.windows.some(w => w.appId === id && w.id === state.activeId) ? "active" : ""}`}
                 onClick={() => dispatch({ type: "OPEN_APP", appId: id })}
                 onContextMenu={(e) => {
                   e.preventDefault();
@@ -143,6 +155,7 @@ export function Taskbar() {
         </button>
         <button className="taskbar-showdesktop" title="Show desktop" onClick={() => state.windows.forEach((w) => dispatch({ type: "MINIMIZE", id: w.id }))} />
       </div>
-    </div>
+    </nav>
+    </>
   );
 }
