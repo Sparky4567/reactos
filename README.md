@@ -73,6 +73,30 @@ bun run typecheck
 bun test
 ```
 
+## Git helper scripts
+
+The repository includes Bash and Windows scripts adapted from Qualia. Run them
+from your system terminal; they operate on this project directory.
+
+| Action | Linux/macOS or Git Bash | Windows Command Prompt |
+| --- | --- | --- |
+| Fetch and pull `origin/main` with rebase | `./update.sh` | `update.bat` |
+| Stage all changes, commit, pull with rebase, and push | `./git.sh` | `git.bat` |
+
+Git and access to the `origin` remote are required. The sync scripts create a
+timestamped `reactos update - YYYY-MM-DD HH:MM:SS` commit. Review `git diff` and
+`git status` before running them: they stage all changes, including untracked
+files that are not ignored. If nothing is staged, they exit without pulling or
+pushing; use `git push` directly to publish existing commits.
+
+Both helpers stop on detached HEAD or an unfinished rebase, merge, or cherry-pick.
+The sync helpers also reject staged conflict markers and whitespace errors, and
+validate changed JSON files using Python 3 on Bash (skipped if unavailable) or
+PowerShell on Windows. A failed pull stops the script before pushing and prints
+recovery steps. Resolve conflicts and run `git rebase --continue`, or cancel with
+`git rebase --abort`, before retrying. After continuing a rebase, use `git push`
+if all changes are already committed.
+
 ## Configuration
 
 The dev/production server listens on port 3000 by default. Override it with a
