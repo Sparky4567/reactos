@@ -21,6 +21,8 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - Ubuntu-style terminal with common commands, quoted paths, pipes, scripts, redirection, and history
 - Image Gallery with uploads, thumbnail browsing, zoom, rotation, download, and SQLite persistence
 - Ollama Chat with streamed Markdown responses, persistent sessions, saved persona templates, and automatic neuromorphic memory
+- Selectable chatbot speech: local Piper with download consent, browser speech, or Off
+- Browser voice dictation into editable chatbot prompts
 - Memory review, search, editing, importance controls, and individual or bulk deletion
 - Interface-wide font scaling, including application controls and Markdown
 - Settings for desktop style, light/dark mode, wallpaper, password, and mobile-friendly navigation
@@ -122,7 +124,7 @@ src/
   App.tsx           # Root component
   os/               # OS state, reducer, virtual file system, app registry
   appearance/       # Desktop styles, preferences API, SQLite storage
-  chat/             # Sessions, personas, memory engine, SQLite storage and saving
+  chat/             # Sessions, personas, memory, voice, SQLite storage and saving
   gallery/          # Image upload/view API and SQLite storage
   terminal/         # Virtual shell and command tests
   components/       # Desktop, Taskbar, StartMenu, Window, apps, ...
@@ -331,12 +333,45 @@ context. Editing is paused during response generation or a storage error; browsi
 and search remain available. **Back to chat** returns to the conversation.
 
 
+## Chat voice
+
+Use the **Speech** list in the chat toolbar:
+
+- **Off** (default): silent replies.
+- **On [Piper]**: confirm the download to enable local speech with
+  [`@mintplex-labs/piper-tts-web`](https://www.npmjs.com/package/@mintplex-labs/piper-tts-web). The English `en_US-amy-low` model is about
+  63 MB, plus runtime files. Models are cached in the browser's origin private
+  filesystem. Enabling permits downloads again if that cache is cleared.
+- **On [Web]**: browser speech synthesis, with no Piper model download.
+  This is also the fallback to select if Piper fails.
+
+Completed replies are spoken automatically. **Read aloud** replays a reply and
+can retry playback blocked by browser autoplay rules. **Stop speech** stops
+playback and discards pending speech; already running model loading/inference
+may finish in the background. Switching sessions, sending another prompt, or
+closing the chat also stops playback.
+
+The microphone button uses browser `SpeechRecognition` / `webkitSpeechRecognition`
+and requests microphone permission when clicked. It appends final transcripts to
+the editable prompt without sending them. Click again to finish dictation.
+Recognition uses the browser language. Unsupported browsers disable the button;
+HTTPS or localhost is required. Browser dictation and browser voices may use
+online services; Piper speech inference runs locally. Piper's default runtime
+files are loaded from CDNs, so a cached model alone does not guarantee offline
+startup. ONNX Runtime is pinned to match Piper's default WASM version.
+
+Voice mode and download consent stay in browser localStorage, independently of
+server chat settings. Clearing browser storage resets the mode to Off and removes
+cached models.
+
 ## Storage overview
 
 | Data | Storage | Survives clearing browser storage? |
 | --- | --- | --- |
 | Chat sessions, messages, persona templates, memories and review metadata | Server SQLite | Yes, after a successful save |
 | Ollama settings and interface font scale | Server SQLite, with a local browser copy | Yes; restored when Chatbot loads |
+| Chat voice mode and Piper download consent | Browser localStorage | No |
+| Downloaded Piper voice model | Browser origin private filesystem | No |
 | Gallery uploads and metadata | Server SQLite | Yes |
 | Desktop style, light/dark mode, wallpaper | Server SQLite | Yes; restored before boot |
 | Virtual filesystem, terminal-created files, Notes, lock-screen password | Browser localStorage | No |

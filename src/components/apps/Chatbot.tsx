@@ -3,6 +3,7 @@ import { loadChat, newSession, type Msg } from "@/chat/state";
 import { recall, remember } from "@/chat/memory";
 import { useChatPersistence } from "@/chat/usePersistence";
 import { MemoryReview } from "./MemoryReview";
+import { useVoice } from "@/chat/useVoice";
 import { Markdown } from "@/components/Markdown";
 
 const SETTINGS_KEY = "reactos.ollama.settings";
@@ -50,6 +51,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
   useEffect(() => () => requestRef.current?.abort(), []);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const voice = useVoice(session.id, text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text));
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -110,6 +112,8 @@ export function Chatbot({ windowId }: { windowId?: string }) {
     const text = input.trim();
     if (!text || sending || !settings.model || !persistence.ready || persistence.error) return;
 
+    voice.stop();
+    voice.stopListening();
     const userMsg: Msg = { id: uid(), role: "user", content: text };
     const assistantMsg: Msg = { id: uid(), role: "assistant", content: "" };
     const recalled = session.memoryEnabled ? recall(chat.memories, text) : { selected: [], memories: chat.memories };
@@ -174,6 +178,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           }
         }
       }
+      if (acc.trim()) void voice.speak(acc);
       if (!acc) acc = "(empty response)";
       setMessages((m) => m.map((msg) => (msg.id === assistantMsg.id ? { ...msg, content: acc } : msg)));
     } catch (e) {
@@ -219,6 +224,15 @@ export function Chatbot({ windowId }: { windowId?: string }) {
               </option>
             ))}
           </select>
+          <select aria-label="Response speech" value={voice.mode} onChange={e => {
+            if (e.target.value === "piper") void voice.enablePiper();
+            else voice.choose(e.target.value as "off" | "web");
+          }}>
+            <option value="off">Speech: Off</option>
+            <option value="piper">On [Piper]</option>
+            <option value="web" disabled={!voice.webSupported}>On [Web]</option>
+          </select>
+          {voice.busy && <button onClick={voice.stop}>Stop speech</button>}
           <button onClick={() => fetchModels(settings.host)} title="Refresh model list" disabled={modelsLoading}>
             <i className={`fa fa-refresh ${modelsLoading ? "fa-spin" : ""}`} />
           </button>
@@ -247,10 +261,13 @@ export function Chatbot({ windowId }: { windowId?: string }) {
         }}>Delete session</button>
       </div>
       <div className="chatbot-banner" role="status">{persistence.status}</div>
+      {voice.status && <div className="chatbot-banner" role="status">{voice.status}</div>}
       {persistence.error && <div role="alert" className="chatbot-banner chatbot-error">{persistence.error} Unsaved changes remain in this window. <button onClick={() => void persistence.retrySave()}>Retry save</button> <button onClick={() => { if (confirm("Reload saved data? Unsaved changes in this window will be discarded.")) window.location.reload(); }}>Reload saved data</button></div>}
 
       {settingsOpen && (
         <div className="chatbot-settings">
+          <p className="chatbot-hint">Speech reads completed replies. Piper uses the English Amy low voice cached in this browser. Web uses your browser’s default voice. Browser speech and dictation may use online services. Voice input requires HTTPS or localhost and microphone permission; review the transcript before sending.</p>
+          {voice.mode === "piper" && <button disabled={voice.busy} onClick={() => void voice.enablePiper()}>Load / retry Piper voice</button>}
           <label>Ollama host</label>
           <div className="chatbot-settings-row">
             <input
@@ -321,7 +338,8 @@ export function Chatbot({ windowId }: { windowId?: string }) {
             <div className="chatbot-bubble">
               {msg.role === "assistant" ? (
                 msg.content ? (
-                  <Markdown>{msg.content}</Markdown>
+                  <><Markdown>{msg.content}</Markdown>
+                  {voice.mode !== "off" && !sending && <button onClick={() => void voice.speak(msg.content)} title="Read this response aloud">Read aloud</button>}</>
                 ) : (
                   <span className="chatbot-typing">Thinking…</span>
                 )
@@ -342,6 +360,11 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           disabled={sending || !settings.model}
           rows={2}
         />
+        <button onClick={voice.dictate} disabled={!voice.dictationSupported || sending || !settings.model}
+          aria-label={voice.listening ? "Stop dictation" : "Dictate message"} aria-pressed={voice.listening}
+          title={voice.dictationSupported ? "Dictate using browser speech recognition (may use online services)" : "Dictation unavailable: use a supported browser on HTTPS or localhost"}>
+          <i className={`fa ${voice.listening ? "fa-stop" : "fa-microphone"}`} />
+        </button>
         <button onClick={send} disabled={sending || !input.trim() || !settings.model} title="Send">
           <i className={`fa ${sending ? "fa-spinner fa-spin" : "fa-paper-plane"}`} />
         </button>
