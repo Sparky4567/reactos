@@ -180,9 +180,39 @@ volume when running in a container. Database files and SQLite sidecars in `data/
 are excluded from Git. To back up the database by copying its file, stop the server
 first; copying only the main file while it is running can omit changes in the WAL.
 
+Memories are also automatically saved as readable, versioned JSON in
+`data/memories.json`. This file is **not ignored by Git**: after restarting the
+server once, existing SQLite memories are exported. After that, creating,
+editing, reviewing, or deleting memories automatically updates both SQLite and
+the JSON file through the normal save cycle (roughly every 400 ms). **No Export
+button or manual export is needed.** The `Saved to SQLite` status means the save
+including the JSON memory copy has completed.
+
+Saving locally does not commit or push to GitHub automatically. Wait for the
+chatbot's saved status, then commit and push the JSON along with your project
+updates:
+
+```sh
+git add data/memories.json
+git commit -m "Update saved memories"
+git push
+```
+
+After pulling on another machine, restart the server to load the JSON memories.
+An existing JSON file takes precedence over SQLite memories on startup; chats,
+personas, and settings stay in SQLite. An empty `memories` array clears memories.
+Stop the server before editing or pulling this file to avoid local saves
+replacing those edits. Invalid JSON stops startup instead of overwriting data.
+The file contains `{ "version": 1, "memories": [...] }`, preserving memory IDs,
+text, timestamps, activation, importance, and associations. It contains personal
+memory content, so commit it only to a repository where you intend to share it.
+Set `CHAT_MEMORIES_PATH` to change its location. JSON storage is server-side and
+still requires the Bun server; it does not make the app work on GitHub Pages.
+
 On the first chatbot load with an empty database, existing browser chat data and
-settings are imported. Once initialized, SQLite is authoritative: clearing browser
-storage or using another browser loads the same saved chats. The legacy browser
+settings are imported, with JSON memories taking precedence if present. Once
+initialized, browsers load the shared server state: clearing browser storage or
+using another browser loads the same saved chats. The legacy browser
 copy is retained, but it does not overwrite an existing database. This desktop uses
 one shared server workspace, rather than separate accounts per browser.
 

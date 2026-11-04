@@ -32,7 +32,8 @@ function normalizeOllamaHost(input?: string | null): string {
   return h;
 }
 
-const chatDatabase = new ChatDatabase(process.env.CHAT_DB_PATH || resolve(import.meta.dir, "../data/chatbot.sqlite"));
+const chatDatabase = new ChatDatabase(process.env.CHAT_DB_PATH || resolve(import.meta.dir, "../data/chatbot.sqlite"),
+  process.env.CHAT_MEMORIES_PATH || resolve(import.meta.dir, "../data/memories.json"));
 
 const gallery = galleryRoutes(chatDatabase.db);
 const appearance = appearanceRoutes(chatDatabase.db);

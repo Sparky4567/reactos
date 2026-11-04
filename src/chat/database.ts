@@ -1,11 +1,13 @@
 import { Database } from 'bun:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { MemoryJsonStorage } from './jsonStorage';
 import { isChatDocument, type ChatDocument } from './document';
 
 export class ChatDatabase {
   readonly db: Database;
-  constructor(path: string) {
+  private readonly memories?: MemoryJsonStorage;
+  constructor(path: string, memoriesPath?: string) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
     this.db = new Database(path, { create: true, strict: true });
     this.db.exec(`PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL; PRAGMA busy_timeout = 5000;
@@ -15,6 +17,19 @@ export class ChatDatabase {
         document TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );`);
+    try {
+      if (memoriesPath) {
+        this.memories = new MemoryJsonStorage(memoriesPath);
+        const memories = this.memories.read();
+        const current = this.read();
+        if (current) {
+          if (memories !== null && JSON.stringify(memories) !== JSON.stringify(current.document.chat.memories)) {
+            current.document.chat.memories = memories;
+            this.save(current.document, current.revision);
+          } else if (memories === null) this.memories.write(current.document.chat.memories);
+        }
+      }
+    } catch (error) { this.db.close(); throw error; }
   }
   read(): { revision: number; document: ChatDocument } | null {
     const row = this.db.query<{ revision: number; document: string }, []>('SELECT revision, document FROM chatbot_state WHERE id = 1').get();
@@ -27,14 +42,23 @@ export class ChatDatabase {
   initialize(document: ChatDocument) {
     if (!isChatDocument(document)) throw new Error('Invalid chatbot data');
     return this.db.transaction(() => {
+      const existing = this.read();
+      if (existing) return existing;
+      const memories = this.memories?.read();
+      if (memories != null) document = { ...document, chat: { ...document.chat, memories } };
       this.db.query('INSERT OR IGNORE INTO chatbot_state (id, revision, document, updated_at) VALUES (1, 1, ?, ?)').run(JSON.stringify(document), new Date().toISOString());
+      this.memories?.write(document.chat.memories);
       return this.read()!;
     }).immediate();
   }
   save(document: ChatDocument, revision: number): number | null {
     if (!isChatDocument(document)) throw new Error('Invalid chatbot data');
-    const result = this.db.query('UPDATE chatbot_state SET document = ?, revision = revision + 1, updated_at = ? WHERE id = 1 AND revision = ?').run(JSON.stringify(document), new Date().toISOString(), revision);
-    return result.changes ? revision + 1 : null;
+    return this.db.transaction(() => {
+      const result = this.db.query('UPDATE chatbot_state SET document = ?, revision = revision + 1, updated_at = ? WHERE id = 1 AND revision = ?').run(JSON.stringify(document), new Date().toISOString(), revision);
+      if (!result.changes) return null;
+      this.memories?.write(document.chat.memories);
+      return revision + 1;
+    }).immediate();
   }
   close() { this.db.close(); }
 }
