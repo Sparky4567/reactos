@@ -206,6 +206,10 @@ export function Chatbot({ windowId }: { windowId?: string }) {
 
   return (
     <div className="app-chatbot">
+      {voice.busy && <div className="chatbot-speech-toast" role="status">
+        <span>{voice.playing ? 'Playing reply aloud' : voice.status || 'Preparing speech…'}</span>
+        <button onClick={voice.stop}>Stop speech</button>
+      </div>}
       <div className="chatbot-toolbar">
         <div className="chatbot-title">
           <i className="fa fa-comments" /> Ollama Chat
@@ -225,14 +229,14 @@ export function Chatbot({ windowId }: { windowId?: string }) {
             ))}
           </select>
           <select aria-label="Response speech" value={voice.mode} onChange={e => {
-            if (e.target.value === "piper") void voice.enablePiper();
+            if (e.target.value === "piper" || e.target.value === "piper-small") void voice.enablePiper(e.target.value);
             else voice.choose(e.target.value as "off" | "web");
           }}>
             <option value="off">Speech: Off</option>
-            <option value="piper">On [Piper]</option>
+            <option value="piper-small">On [Piper Small]</option>
+            <option value="piper">On [Piper Medium]</option>
             <option value="web" disabled={!voice.webSupported}>On [Web]</option>
           </select>
-          {voice.busy && <button onClick={voice.stop}>Stop speech</button>}
           <button onClick={() => fetchModels(settings.host)} title="Refresh model list" disabled={modelsLoading}>
             <i className={`fa fa-refresh ${modelsLoading ? "fa-spin" : ""}`} />
           </button>
@@ -266,8 +270,8 @@ export function Chatbot({ windowId }: { windowId?: string }) {
 
       {settingsOpen && (
         <div className="chatbot-settings">
-          <p className="chatbot-hint">Speech reads completed replies. Piper uses the English Amy low voice cached in this browser. Web uses your browser’s default voice. Browser speech and dictation may use online services. Voice input requires HTTPS or localhost and microphone permission; review the transcript before sending.</p>
-          {voice.mode === "piper" && <button disabled={voice.busy} onClick={() => void voice.enablePiper()}>Load / retry Piper voice</button>}
+          <p className="chatbot-hint">Speech reads completed replies. Piper Small uses English Lessac low; Piper Medium uses English Amy medium. Both downloads are about 63 MB and cached in this browser. Web uses your browser’s default voice. Browser speech and dictation may use online services. Voice input requires HTTPS or localhost and microphone permission; review the transcript before sending.</p>
+          {(voice.mode === "piper" || voice.mode === "piper-small") && <button disabled={voice.busy} onClick={() => void voice.enablePiper()}>Load / retry Piper voice</button>}
           <label>Ollama host</label>
           <div className="chatbot-settings-row">
             <input

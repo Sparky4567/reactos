@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
-type Mode = 'off' | 'piper' | 'web';
+type Mode = 'off' | 'piper' | 'piper-small' | 'web';
 const KEY = 'reactos.chat.voice';
-const VOICE = 'en_US-amy-low';
+// Both voices support the phonemizer's extended IDs, including syllabic mark 144.
+const VOICES = { piper: 'en_US-amy-medium', 'piper-small': 'en_US-lessac-low' } as const;
+type PiperMode = keyof typeof VOICES;
 interface Recognition {
   lang: string; continuous: boolean; interimResults: boolean;
   onresult: ((event: { results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
@@ -15,29 +17,38 @@ function recognitionConstructor() {
   return w.SpeechRecognition || w.webkitSpeechRecognition;
 }
 function load(): Mode {
-  try { const mode = localStorage.getItem(KEY); if (mode === 'web' || mode === 'piper') return mode; } catch {}
+  try { const mode = localStorage.getItem(KEY); if (mode === 'web' || mode === 'piper' || mode === 'piper-small') return mode; } catch {}
   return 'off';
 }
 // Only imported after the browser user explicitly enables Piper.
 let inferenceQueue: Promise<unknown> = Promise.resolve();
-let piperSession: Promise<import('@mintplex-labs/piper-tts-web').TtsSession> | undefined;
-function getPiper(progress: (message: string) => void) {
-  return piperSession ??= import('@mintplex-labs/piper-tts-web').then(tts => tts.TtsSession.create({
-    voiceId: VOICE,
-    progress: p => progress(p.total ? `Loading voice: ${Math.round(p.loaded / p.total * 100)}%` : 'Loading voice…'),
-  })).catch(async error => {
-    // The library retains failed singleton sessions; allow an explicit retry.
+const piperSessions = new Map<PiperMode, Promise<import('@mintplex-labs/piper-tts-web').TtsSession>>();
+function getPiper(mode: PiperMode, progress: (message: string) => void) {
+  const existing = piperSessions.get(mode);
+  if (existing) return existing;
+  const pending = inferenceQueue.then(async () => {
     const tts = await import('@mintplex-labs/piper-tts-web');
+    // The library otherwise changes voiceId without reloading the model/config.
+    // Keep a separate initialized instance for each voice.
     tts.TtsSession._instance = null;
-    piperSession = undefined;
+    return tts.TtsSession.create({
+      voiceId: VOICES[mode],
+      progress: p => progress(p.total ? `Loading voice: ${Math.round(p.loaded / p.total * 100)}%` : 'Loading voice…'),
+    });
+  }).catch(error => {
+    piperSessions.delete(mode);
     throw error;
   });
+  inferenceQueue = pending.catch(() => {});
+  piperSessions.set(mode, pending);
+  return pending;
 }
 
 export function useVoice(context: string, append: (text: string) => void) {
   const [mode, setMode] = useState<Mode>(load);
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [listening, setListening] = useState(false);
   const currentMode = useRef(mode);
   const generation = useRef(0);
@@ -55,7 +66,7 @@ export function useVoice(context: string, append: (text: string) => void) {
     if (url.current) URL.revokeObjectURL(url.current);
     url.current = '';
     if (webSupported) window.speechSynthesis.cancel();
-    if (mounted.current) { setBusy(false); setStatus(''); }
+    if (mounted.current) { setBusy(false); setPlaying(false); setStatus(''); }
   };
   const stopListening = () => {
     const r = recognition.current;
@@ -72,15 +83,16 @@ export function useVoice(context: string, append: (text: string) => void) {
     stop(); currentMode.current = next; setMode(next);
     try { localStorage.setItem(KEY, next); } catch {}
   };
-  const enablePiper = async () => {
-    if (!window.confirm('Enable Piper? Download the English Amy low voice (about 63 MB), plus speech runtime files, from Hugging Face/CDNs. The model is cached in this browser; speech runs locally. Enabling allows automatic downloads again if the browser clears its cache. Continue?')) return;
+  const enablePiper = async (next: PiperMode = currentMode.current === 'piper-small' ? 'piper-small' : 'piper') => {
+    const label = next === 'piper-small' ? 'Lessac small (low quality)' : 'Amy medium';
+    if (!window.confirm(`Enable Piper? Download the English ${label} voice (about 63 MB), plus speech runtime files, from Hugging Face/CDNs. The model is cached in this browser; speech runs locally. Enabling allows automatic downloads again if the browser clears its cache. Continue?`)) return;
     if (!window.isSecureContext || !navigator.storage?.getDirectory) {
       report('Piper requires HTTPS or localhost and browser file storage. Try On [Web].'); return;
     }
-    choose('piper');
+    choose(next);
     const id = generation.current;
     setBusy(true); report('Loading voice…');
-    try { await getPiper(message => { if (id === generation.current) report(message); }); if (id === generation.current) report('Piper ready.'); }
+    try { await getPiper(next, message => { if (id === generation.current) report(message); }); if (id === generation.current) report('Piper ready.'); }
     catch (e) { if (id === generation.current) report(`Piper unavailable: ${(e as Error).message}. Try On [Web].`); }
     finally { if (id === generation.current && mounted.current) setBusy(false); }
   };
@@ -93,12 +105,13 @@ export function useVoice(context: string, append: (text: string) => void) {
       if (currentMode.current === 'web') {
         if (!webSupported) throw new Error('Browser speech is unavailable.');
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.onend = () => { if (id === generation.current && mounted.current) setBusy(false); };
-        utterance.onerror = event => { if (id === generation.current) { report(`Speech: ${event.error}. Use Read aloud to retry.`); setBusy(false); } };
+        utterance.onstart = () => { if (id === generation.current && mounted.current) setPlaying(true); };
+        utterance.onend = () => { if (id === generation.current) stop(); };
+        utterance.onerror = event => { if (id === generation.current) { stop(); report(`Speech: ${event.error}. Use Read aloud to retry.`); } };
         window.speechSynthesis.speak(utterance);
       } else {
         report('Preparing speech…');
-        const session = await getPiper(message => { if (id === generation.current) report(message); });
+        const session = await getPiper(currentMode.current as PiperMode, message => { if (id === generation.current) report(message); });
         if (id !== generation.current) return;
         // The Piper singleton shares its phonemizer: serialize inference across chat windows.
         const pending = inferenceQueue.then(() => id === generation.current ? session.predict(text) : null);
@@ -110,7 +123,7 @@ export function useVoice(context: string, append: (text: string) => void) {
         const player = new Audio(url.current); audio.current = player;
         player.onended = () => { if (id === generation.current) stop(); };
         player.onerror = () => { if (id === generation.current) { stop(); report('Audio playback failed. Use Read aloud to retry.'); } };
-        await player.play(); if (id === generation.current) report('');
+        await player.play(); if (id === generation.current && mounted.current) { setPlaying(true); report(''); }
       }
     } catch (e) {
       if (id === generation.current && mounted.current) { stop(); report(`Speech unavailable: ${(e as Error).message}. Try On [Web] or Read aloud.`); }
@@ -133,5 +146,5 @@ export function useVoice(context: string, append: (text: string) => void) {
     try { r.start(); setListening(true); }
     catch (e) { recognition.current = null; setListening(false); report((e as Error).message); }
   };
-  return { mode, choose, enablePiper, speak, stop, stopListening, dictate, status, busy, listening, webSupported, dictationSupported };
+  return { mode, choose, enablePiper, speak, stop, stopListening, dictate, status, busy, playing, listening, webSupported, dictationSupported };
 }

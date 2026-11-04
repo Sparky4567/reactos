@@ -704,7 +704,16 @@ body { background: #000; }
 @keyframes slide { from { background-position: 0 0; } to { background-position: 200% 0; } }
 
 /* ===== App: Chatbot ===== */
-.app-chatbot { display: flex; flex-direction: column; height: 100%; font-size: 0.8125rem; }
+.app-chatbot { position: relative; display: flex; flex-direction: column; height: 100%; font-size: 0.8125rem; }
+.chatbot-speech-toast {
+  position: absolute; bottom: 90px; right: 16px; z-index: 10;
+  display: flex; align-items: center; gap: 12px;
+  max-width: calc(100% - 32px); padding: 12px 14px;
+  background: var(--surface, #f3f3f3); color: var(--ink, #1b1b1b);
+  border: 1px solid var(--line, #aaa); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.chatbot-speech-toast button { flex-shrink: 0; }
 .chatbot-toolbar {
   display: flex; align-items: center; gap: 8px; padding: 8px 12px;
   border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(0,0,0,0.02);

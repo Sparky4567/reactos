@@ -338,15 +338,22 @@ and search remain available. **Back to chat** returns to the conversation.
 Use the **Speech** list in the chat toolbar:
 
 - **Off** (default): silent replies.
-- **On [Piper]**: confirm the download to enable local speech with
-  [`@mintplex-labs/piper-tts-web`](https://www.npmjs.com/package/@mintplex-labs/piper-tts-web). The English `en_US-amy-low` model is about
-  63 MB, plus runtime files. Models are cached in the browser's origin private
+- **On [Piper Small]** or **On [Piper Medium]**: confirm the download to enable local speech with
+  [`@mintplex-labs/piper-tts-web`](https://www.npmjs.com/package/@mintplex-labs/piper-tts-web).
+  Small uses English `en_US-lessac-low`; Medium uses `en_US-amy-medium`.
+  Both downloads are about 63 MB, plus runtime files; Small selects the low
+  quality tier rather than a smaller download. Models are cached in the browser's origin private
   filesystem. Enabling permits downloads again if that cache is cleared.
+  Both choices support the phonemizer's extended symbol IDs; Amy low's smaller
+  symbol table can cause ONNX `Gather` out-of-bounds errors during speech.
+  The selected voice is remembered between visits. Switch between Small and
+  Medium in the Speech list; **Load / retry Piper voice** loads the selected model.
 - **On [Web]**: browser speech synthesis, with no Piper model download.
   This is also the fallback to select if Piper fails.
 
 Completed replies are spoken automatically. **Read aloud** replays a reply and
-can retry playback blocked by browser autoplay rules. **Stop speech** stops
+can retry playback blocked by browser autoplay rules. A toast during speech
+preparation and playback offers **Stop speech**, which stops
 playback and discards pending speech; already running model loading/inference
 may finish in the background. Switching sessions, sending another prompt, or
 closing the chat also stops playback.
