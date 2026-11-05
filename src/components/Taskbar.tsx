@@ -36,11 +36,12 @@ export function Taskbar() {
         <button
           className={`taskbar-btn start-btn ${state.startOpen ? "active" : ""}`}
           onClick={() => dispatch({ type: "SET_START", open: !state.startOpen })}
-          title={ubuntu ? "Show applications" : state.desktopStyle === "chromeos" ? "Launcher" : "Start"}
-          aria-label={ubuntu ? "Show applications" : state.desktopStyle === "chromeos" ? "Launcher" : "Start"}
+          title={ubuntu ? "Show applications" : ["chromeos", "android", "fuchsia"].includes(state.desktopStyle) ? "Launcher" : "Start"}
+          aria-label={ubuntu ? "Show applications" : ["chromeos", "android", "fuchsia"].includes(state.desktopStyle) ? "Launcher" : "Start"}
           aria-expanded={state.startOpen}
         >
           <DesktopMark style={state.desktopStyle} />
+          {state.desktopStyle === "winretro" && <span>Start</span>}
         </button>
         <div className="taskbar-search" onClick={() => dispatch({ type: "SET_START", open: true })}>
           <i className="fa fa-search" />

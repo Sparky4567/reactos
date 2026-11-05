@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useOS } from "@/os/store";
 
 const WALLS = [
+  { name: "Fuchsia", value: WALLPAPERS.fuchsia },
+  { name: "Classic teal", value: WALLPAPERS.winretro },
+  { name: "Botanical", value: WALLPAPERS.android },
   { name: "Aubergine", value: WALLPAPERS.ubuntu },
   { name: "Morning", value: WALLPAPERS.chromeos },
   { name: "Bloom", value: "linear-gradient(135deg, #2b5876 0%, #4e4376 50%, #1a1a2e 100%)" },
@@ -90,7 +93,7 @@ export function Settings() {
             </div>
             <div className="settings-card">
               <h3>Colors</h3>
-              <p>Accent color: {state.desktopStyle === "ubuntu" ? "Ubuntu orange" : state.desktopStyle === "chromeos" ? "Sky blue" : "Windows blue"}</p>
+              <p>Accent color: {state.desktopStyle === "fuchsia" ? "Fuchsia pink" : state.desktopStyle === "android" ? "Botanical green" : state.desktopStyle === "winretro" ? "Classic navy" : state.desktopStyle === "ubuntu" ? "Ubuntu orange" : state.desktopStyle === "chromeos" ? "Sky blue" : "Windows blue"}</p>
             </div>
           </div>
         )}

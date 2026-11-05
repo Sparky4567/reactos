@@ -22,7 +22,7 @@ export function LockScreen() {
     // push a welcome notification
     dispatch({
       type: "PUSH_NOTIFICATION",
-      n: { id: `n-${Date.now()}`, title: "Welcome", body: "Welcome to ReactOS Browser Clone.", icon: state.desktopStyle === "win11" ? "fa-windows" : state.desktopStyle === "chromeos" ? "fa-chrome" : "fa-circle-o", time: Date.now() },
+      n: { id: `n-${Date.now()}`, title: "Welcome", body: "Welcome to ReactOS Browser Clone.", icon: ["win11", "winretro"].includes(state.desktopStyle) ? "fa-windows" : state.desktopStyle === "android" ? "fa-android" : state.desktopStyle === "chromeos" ? "fa-chrome" : "fa-circle-o", time: Date.now() },
     });
   };
 

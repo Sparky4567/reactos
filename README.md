@@ -1,13 +1,13 @@
 # ReactOS Browser Clone
 
-A browser desktop with switchable Ubuntu, Windows 11, and ChromeOS appearances, built with React 19 and Bun. Ubuntu is the default.
+A browser desktop with switchable Ubuntu, Windows 11, ChromeOS, Google Fuchsia, Windows retro, and Android appearances, built with React 19 and Bun. Ubuntu is the default.
 
 It simulates a full OS-like experience: boot screen, lock screen, taskbar, start menu, desktop icons, draggable and resizable windows, notifications, widgets, action center, context menus, and a virtual file system with several built-in apps.
 
 ## Features
 
 - Desktop with draggable icons and context menus (single-tap launch on touch/mobile)
-- Ubuntu (default), Windows 11, and ChromeOS desktop styles with SQLite-backed appearance preferences
+- Ubuntu (default), Windows 11, ChromeOS, Google Fuchsia, Windows retro, and Android desktop styles with SQLite-backed appearance preferences
 - Window manager (drag, resize, minimize, maximize, and viewport bounds clamping)
 - Mobile-responsive layout (auto-maximized windows on mobile, dynamic viewport height, safe-area inset support)
 - Responsive dock, shelf, or taskbar with touch-scrollable applications
@@ -256,12 +256,18 @@ applies to server uploads.
 ## Desktop appearance
 
 Open **Settings → System → Desktop style** (also available under Personalization)
-to choose Ubuntu, Windows 11, or ChromeOS. Switching applies immediately and keeps
+to choose Ubuntu, Windows 11, ChromeOS, Google Fuchsia, Windows retro, or Android. Switching applies immediately and keeps
 open applications running. Ubuntu uses an Activities bar, a left application dock,
 an application overview, orange accents, and aubergine backgrounds. On small screens
 the dock moves to the bottom. ChromeOS uses a floating shelf, a rounded launcher,
 cool surfaces, and soft backgrounds. Windows 11 retains the original centered taskbar
 and Start menu.
+
+Google Fuchsia uses magenta accents, layered cards, a floating dock, and a pink/purple
+wallpaper. Windows retro brings a Windows 95-inspired teal desktop, navy title bars,
+beveled controls, and a classic Start button. Android uses botanical Material-inspired
+colors, rounded panels, circular icons, and pill controls. Each style includes a
+preview in Settings and supports light and dark modes.
 
 Light/dark mode and background can be changed independently. Switching styles
 replaces the background only if it is that style's default; custom backgrounds are
@@ -280,8 +286,8 @@ chat histories or image uploads.
 ## Ubuntu-style terminal
 
 Open **Terminal** from the dock, desktop, or application launcher. Ubuntu and
-ChromeOS appearances use a `user@reactos:~$` prompt with Linux-style paths.
-`/home/user` maps to the same virtual files shown in Files. Windows 11 retains the
+ChromeOS, Google Fuchsia, and Android appearances use a `user@reactos:~$` prompt with Linux-style paths.
+`/home/user` maps to the same virtual files shown in Files. Windows 11 and Windows retro use the
 PowerShell-style prompt and Windows path display, plus aliases such as `dir`,
 `type`, `copy`, `move`, `del`, and `cls`.
 

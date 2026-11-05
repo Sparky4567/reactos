@@ -33,6 +33,7 @@ export const APP_MAP = Object.fromEntries(APPS.map((a) => [a.id, a]));
 
 export function presentApp(app: AppDef, style: DesktopStyle): AppDef {
   if (style === "win11") return app;
+  if (style === "winretro") return { ...app, name: app.id === "browser" ? "Internet Explorer" : app.id === "explorer" ? "My Computer" : app.id === "notes" ? "Notes" : app.name };
   const names: Record<string, string> = { explorer: "Files", notepad: "Text Editor", browser: "Web Browser", notes: "Notes" };
-  return { ...app, name: names[app.id] || app.name, icon: app.id === "browser" ? (style === "chromeos" ? "fa-chrome" : "fa-globe") : app.icon };
+  return { ...app, name: names[app.id] || app.name, icon: app.id === "browser" ? ((style === "chromeos" || style === "android") ? "fa-chrome" : "fa-globe") : app.icon };
 }

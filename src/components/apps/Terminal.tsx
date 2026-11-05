@@ -1,3 +1,4 @@
+import { isWindowsStyle } from '@/appearance/preferences';
 import { useEffect, useRef, useState } from 'react';
 import { useOS } from '@/os/store';
 import { executeShell, freshSession, prompt, type ShellSession } from '@/terminal/shell';
@@ -22,8 +23,8 @@ export function Terminal() {
 
   useEffect(() => {
     if (previousStyle.current === state.desktopStyle) return;
-    const wasWindows = previousStyle.current === 'win11';
-    const isWindows = state.desktopStyle === 'win11';
+    const wasWindows = isWindowsStyle(previousStyle.current);
+    const isWindows = isWindowsStyle(state.desktopStyle);
     if (wasWindows !== isWindows) setSession(current => ({
       lastCode: current.lastCode,
       cwd: isWindows ? current.cwd.slice(0, 2).join('/') === 'home/user' ? current.cwd.slice(2) : [] : ['home', 'user', ...current.cwd],

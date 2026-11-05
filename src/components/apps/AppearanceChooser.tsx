@@ -3,6 +3,9 @@ import { WALLPAPERS, type DesktopStyle } from '@/appearance/preferences';
 const styles: { id: DesktopStyle; name: string; description: string }[] = [
   { id: 'ubuntu', name: 'Ubuntu', description: 'Activities bar · Side dock · Warm aubergine' },
   { id: 'win11', name: 'Windows 11', description: 'Centered taskbar · Start menu · Glass surfaces' },
+  { id: 'fuchsia', name: 'Google Fuchsia', description: 'Magenta accents · Floating dock · Layered cards' },
+  { id: 'winretro', name: 'Windows retro', description: 'Classic Start · Beveled edges · Teal desktop' },
+  { id: 'android', name: 'Android', description: 'Material colors · Pill controls · Rounded panels' },
   { id: 'chromeos', name: 'ChromeOS', description: 'Floating shelf · Rounded cards · Soft colors' },
 ];
 export function AppearanceChooser() {

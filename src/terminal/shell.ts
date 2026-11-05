@@ -1,3 +1,5 @@
+import { isWindowsStyle } from '@/appearance/preferences';
+import { DESKTOP_NAMES } from '@/appearance/preferences';
 import type { FSNode } from '@/os/types';
 import type { DesktopStyle } from '@/appearance/preferences';
 import { cloneFS, createFile, createFolder, deleteNode, findNode, formatSize, pathStr, resolvePath } from '@/os/fs';
@@ -22,10 +24,10 @@ Shell:       history, clear, help, man command, sh/bash/run script
 Use quotes for spaces, | to pipe, > or >> to write output,
 && to continue on success, and ; to run commands in sequence.
 Up/Down: history · Ctrl+L: clear · Ctrl+C: cancel input`;
-export const freshSession = (style: DesktopStyle): ShellSession => ({ cwd: style === 'win11' ? [] : ['home', 'user'], lastCode: 0 });
-export const displayPath = (cwd: string[], style: DesktopStyle) => style === 'win11' ? pathStr(cwd) : '/' + cwd.join('/');
+export const freshSession = (style: DesktopStyle): ShellSession => ({ cwd: isWindowsStyle(style) ? [] : ['home', 'user'], lastCode: 0 });
+export const displayPath = (cwd: string[], style: DesktopStyle) => isWindowsStyle(style) ? pathStr(cwd) : '/' + cwd.join('/');
 export function prompt(cwd: string[], style: DesktopStyle) {
-  if (style === 'win11') return `PS ${pathStr(cwd)}>`;
+  if (isWindowsStyle(style)) return `PS ${pathStr(cwd)}>`;
   const path = displayPath(cwd, style).replace(/^\/home\/user(?=\/|$)/, '~');
   return `user@reactos:${path}$`;
 }
@@ -77,7 +79,7 @@ function parse(tokens: Token[]): Group[] {
 }
 
 export function executeShell(input: string, fs: FSNode, session: ShellSession, style: DesktopStyle, history: string[] = []): ShellResult {
-  const linux = style !== 'win11';
+  const linux = !isWindowsStyle(style);
   // Files is the user's home. Only /home/user is writable in the Linux view.
   let root: FSNode = linux ? { name: '/', type: 'folder', children: [
     { name: 'home', type: 'folder', children: [{ ...cloneFS(fs), name: 'user' }] },
@@ -269,7 +271,7 @@ export function executeShell(input: string, fs: FSNode, session: ShellSession, s
       case 'uname': return print(args.includes('-a') ? 'ReactOS-browser 1.0 web JavaScript' : 'ReactOS-browser');
       case 'date': return print(new Date().toString());
       case 'uptime': return print(`${Math.floor(performance.now() / 1000)} seconds since page load`);
-      case 'neofetch': return print(`OS: ReactOS Browser Desktop\nDesktop: ${style === 'ubuntu' ? 'Ubuntu' : style === 'chromeos' ? 'ChromeOS' : 'Windows 11'} style\nShell: ReactOS sh\nFilesystem: shared virtual desktop files\nUptime: ${Math.floor(performance.now() / 1000)}s`);
+      case 'neofetch': return print(`OS: ReactOS Browser Desktop\nDesktop: ${DESKTOP_NAMES[style]} style\nShell: ReactOS sh\nFilesystem: shared virtual desktop files\nUptime: ${Math.floor(performance.now() / 1000)}s`);
       case 'history': return print(history.map((line, i) => `${i + 1}  ${line}`).join('\n'));
       case 'sh': case 'bash': case 'run': return args[0] ? runFile(args[0]) : fail(`${name}: provide a script file`);
       case 'sudo': case 'apt': case 'apt-get': return fail(`${name}: host system commands are unavailable in this virtual terminal. Type help for supported commands.`);

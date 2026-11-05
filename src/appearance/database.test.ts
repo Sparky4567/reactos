@@ -7,14 +7,14 @@ import { appearanceRoutes } from './database';
 import { DEFAULT_APPEARANCE, WALLPAPERS, workspace, type DesktopStyle } from './preferences';
 const put = (body: unknown, origin = 'http://localhost') => new Request('http://localhost/api/appearance', { method: 'PUT', headers: { 'Content-Type': 'application/json', origin }, body: JSON.stringify(body) });
 describe('Desktop appearance persistence', () => {
-  test('defaults to Ubuntu and restores all three styles, theme and wallpaper after reopening SQLite', async () => {
+  test('defaults to Ubuntu and restores all six styles, theme and wallpaper after reopening SQLite', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'reactos-appearance-'));
     let db = new Database(join(dir, 'preferences.sqlite'));
     try {
       let routes = appearanceRoutes(db);
       expect(await routes.GET().json()).toEqual({ revision: 1, preferences: DEFAULT_APPEARANCE });
       let revision = 1;
-      for (const desktopStyle of ['ubuntu', 'win11', 'chromeos'] as DesktopStyle[]) {
+      for (const desktopStyle of ['ubuntu', 'win11', 'chromeos', 'fuchsia', 'winretro', 'android'] as DesktopStyle[]) {
         const preferences = { desktopStyle, theme: 'light', wallpaper: WALLPAPERS[desktopStyle] };
         const response = await routes.PUT(put({ revision, preferences }));
         expect(response.status).toBe(200);
@@ -45,6 +45,11 @@ describe('Desktop appearance persistence', () => {
     expect(workspace('ubuntu', 1440, 900)).toEqual({ width: 1364, height: 864 });
     expect(workspace('ubuntu', 390, 844)).toEqual({ width: 390, height: 748 });
     expect(workspace('win11', 1440, 900)).toEqual({ width: 1440, height: 852 });
+    for (const style of ['fuchsia', 'android'] as DesktopStyle[]) {
+      expect(workspace(style, 1440, 900)).toEqual({ width: 1440, height: 824 });
+      expect(workspace(style, 390, 844)).toEqual({ width: 390, height: 768 });
+    }
+    expect(workspace('winretro', 1440, 900)).toEqual({ width: 1440, height: 852 });
     expect(workspace('chromeos', 1440, 900)).toEqual({ width: 1440, height: 824 });
   });
 });

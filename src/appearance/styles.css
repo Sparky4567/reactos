@@ -44,25 +44,25 @@ html[data-style="chromeos"][data-theme] .lock-screen { background: linear-gradie
 .preview-chromeos .preview-dock { bottom: 5px; left: 22%; width: 56%; height: 17px; border-radius: 12px; background: #e1effacc; }
 .preview-chromeos .preview-window { border-radius: 9px; }.preview-chromeos .preview-window::before { border-radius: 9px 9px 0 0; background: #e0eaf2; }
 /* All apps share accent and focus treatment. */
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.seg button.active, .ac-toggle.on, .chatbot-settings-row button, .chatbot-input button) { background: var(--accent); border-color: var(--accent); color: white; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.settings-nav-item.active, .sidebar-item.active, .notes-list li.active) { background: var(--accent-soft); color: var(--ink); }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.wall-tile.active, .gallery-thumbnail.selected) { border-color: var(--accent); }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .chatbot-msg-user .chatbot-bubble { background: var(--accent-soft); }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .chatbot-msg-assistant .chatbot-avatar { color: var(--accent); background: var(--accent-soft); }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(button, input, select, textarea, a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) input { accent-color: var(--accent); }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window { font-family: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); backdrop-filter: none; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-titlebar { min-height: 44px; height: auto; background: var(--surface-raised); border-bottom: 1px solid var(--line); padding: 6px 10px 6px 16px; gap: 8px; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-title { font-size: .8125rem; font-weight: 600; min-width: 0; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-title span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-controls { gap: 6px; flex-shrink: 0; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-controls button { width: 28px; height: 28px; border-radius: 50%; background: #8882; font-size: .6875rem; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window-controls button:hover { background: #8885; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.explorer-sidebar, .settings-sidebar, .notes-sidebar, .notes-pages) { background: var(--surface-sidebar); border-color: var(--line); }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.settings-card, .widget) { background: var(--surface-raised); border: 1px solid var(--line); border-radius: 12px; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) :is(.context-menu, .widgets-panel, .action-center, .toast) { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .desktop-icon-img { border-radius: 14px; background: #ffffff18; box-shadow: 0 3px 10px #0002; }
-:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .desktop-icon-label { font-weight: 500; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) :is(.seg button.active, .ac-toggle.on, .chatbot-settings-row button, .chatbot-input button) { background: var(--accent); border-color: var(--accent); color: white; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) :is(.settings-nav-item.active, .sidebar-item.active, .notes-list li.active) { background: var(--accent-soft); color: var(--ink); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) :is(.wall-tile.active, .gallery-thumbnail.selected) { border-color: var(--accent); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .chatbot-msg-user .chatbot-bubble { background: var(--accent-soft); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .chatbot-msg-assistant .chatbot-avatar { color: var(--accent); background: var(--accent-soft); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) :is(button, input, select, textarea, a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) input { accent-color: var(--accent); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window { font-family: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); backdrop-filter: none; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window-titlebar { min-height: 44px; height: auto; background: var(--surface-raised); border-bottom: 1px solid var(--line); padding: 6px 10px 6px 16px; gap: 8px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window-title { font-size: .8125rem; font-weight: 600; min-width: 0; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window-title span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window-controls { gap: 6px; flex-shrink: 0; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window-controls button { width: 28px; height: 28px; border-radius: 50%; background: #8882; font-size: .6875rem; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window-controls button:hover { background: #8885; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) :is(.explorer-sidebar, .settings-sidebar, .notes-sidebar, .notes-pages) { background: var(--surface-sidebar); border-color: var(--line); }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) :is(.settings-card, .widget) { background: var(--surface-raised); border: 1px solid var(--line); border-radius: 12px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) :is(.context-menu, .widgets-panel, .action-center, .toast) { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .desktop-icon-img { border-radius: 14px; background: #ffffff18; box-shadow: 0 3px 10px #0002; }
+:is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .desktop-icon-label { font-weight: 500; }
 /* Ubuntu: dark top panel, left dock, application overview, Yaru-like headers. */
 html[data-style="ubuntu"][data-theme] .os-windows-layer { inset: var(--shell-top) 0 var(--total-taskbar-height) var(--shell-left); }
 html[data-style="ubuntu"][data-theme] .desktop-icons { inset: var(--shell-top) 0 var(--total-taskbar-height) var(--shell-left); }
@@ -152,7 +152,7 @@ html[data-style="chromeos"][data-theme="dark"] :is(.chatbot-input button, .chatb
   html[data-style="ubuntu"][data-theme] .start-tile-icon { width: 40px; height: 40px; font-size: 1.25rem; }
   html[data-style="ubuntu"][data-theme] .start-search { margin: 12px; width: calc(100% - 24px); }
   html[data-style="ubuntu"][data-theme] :is(.widgets-panel, .action-center) { width: calc(100% - 16px); max-height: calc(100dvh - var(--shell-top) - var(--total-taskbar-height) - 16px); }
-  :is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme]) .os-window { border-radius: 0; }
+  :is(html[data-style="ubuntu"][data-theme], html[data-style="chromeos"][data-theme], html[data-style="fuchsia"][data-theme], html[data-style="android"][data-theme], html[data-style="winretro"][data-theme]) .os-window { border-radius: 0; }
   html[data-style="chromeos"][data-theme] .taskbar { left: 8px; right: 8px; gap: 4px; }
   html[data-style="chromeos"][data-theme] .taskbar-search, html[data-style="chromeos"][data-theme] .taskbar-tray, html[data-style="chromeos"][data-theme] .taskbar-notif-btn { display: none; }
   html[data-style="chromeos"][data-theme] .taskbar-center { justify-content: flex-start; gap: 4px; }
@@ -190,3 +190,66 @@ html[data-style="chromeos"][data-theme] .app-terminal { background: #18212e; col
 .terminal-run { color: inherit; background: transparent; border: 1px solid #ffffff30; border-radius: 5px; padding: 4px 10px; flex-shrink: 0; }
 .terminal-input-row .terminal-prompt { max-width: 70%; overflow-wrap: anywhere; white-space: normal; }
 @media (max-width: 768px) { .terminal-input-row .terminal-prompt { max-width: 100%; } }
+
+/* Fuchsia and Android use a card-based shell with a compact bottom launcher. */
+html[data-style="fuchsia"][data-theme] { --accent: #d62988; --accent-soft: #d6298826; --total-taskbar-height: calc(76px + var(--safe-bottom)); }
+html[data-style="android"][data-theme] { --accent: #386a50; --accent-soft: #7fad862b; --total-taskbar-height: calc(76px + var(--safe-bottom)); }
+html[data-style="fuchsia"][data-theme="light"] { --surface: #fff4fb; --surface-raised: #fff; --surface-sidebar: #f5e2f0; --ink: #392538; --line: #60234b20; }
+html[data-style="fuchsia"][data-theme="dark"] { --surface: #2d1d36; --surface-raised: #3f2949; --surface-sidebar: #25182d; --ink: #ffe7f5; --line: #f2b9df25; --accent: #f591c8; --accent-soft: #f591c825; }
+html[data-style="android"][data-theme="light"] { --surface: #f2f6eb; --surface-raised: #fcfff6; --surface-sidebar: #e1e9d8; --ink: #213528; --line: #263d2420; }
+html[data-style="android"][data-theme="dark"] { --surface: #1b251e; --surface-raised: #2d392f; --surface-sidebar: #152019; --ink: #e0eddc; --line: #bfdbb820; --accent: #afd4a7; --accent-soft: #afd4a725; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(body, #root) { font-family: Roboto, "Noto Sans", system-ui, sans-serif; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .os-window { border-radius: 24px; box-shadow: 0 18px 60px #0004; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .taskbar { left: 16px; right: 16px; bottom: calc(10px + var(--safe-bottom)); height: 56px; padding: 6px; gap: 8px; border-radius: 28px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 6px 28px #0003; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .taskbar-center { position: static; transform: none; flex: 1; min-width: 0; overflow-x: auto; justify-content: center; scrollbar-width: none; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(.taskbar-btn, .taskbar-app) { flex-shrink: 0; width: 42px; height: 42px; border-radius: 16px; color: var(--ink); }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(.start-btn, .taskbar-app.active) { background: var(--accent-soft); color: var(--accent); }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(.taskbar-search, .taskbar-showdesktop) { display: none; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .taskbar-right { flex-shrink: 0; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .start-menu { bottom: var(--total-taskbar-height); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 28px; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(.start-search, .start-tile, .ac-toggle) { border-radius: 24px; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .start-footer { background: var(--surface-sidebar); border-color: var(--line); }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .start-tile-icon { background: var(--accent-soft); border-radius: 18px; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(.widgets-panel, .action-center) { bottom: var(--total-taskbar-height); border-radius: 28px; }
+html[data-style="fuchsia"][data-theme] :is(.boot-screen, .lock-screen) { background: linear-gradient(145deg, #60206f, #c62c85, #302460); }
+html[data-style="android"][data-theme] :is(.boot-screen, .lock-screen) { background: linear-gradient(145deg, #233e2f, #668561); }
+html[data-style="android"][data-theme] :is(.os-window-controls button, .desktop-icon-img, .start-tile-icon) { border-radius: 50%; }
+html[data-style="android"][data-theme] .settings-card { border-radius: 24px; }
+:is(html[data-style="fuchsia"], html[data-style="android"])[data-theme="dark"] :is(.seg button.active, .ac-toggle.on, .chatbot-settings-row button, .chatbot-input button) { color: var(--surface); }
+.preview-fuchsia .preview-dock, .preview-android .preview-dock { bottom: 5px; left: 10%; width: 80%; height: 16px; border-radius: 12px; background: #fff9; }
+.preview-fuchsia .preview-window::before { background: #f0b8da; }
+.preview-android .preview-window { border-radius: 12px; }.preview-android .preview-window::before { background: #d8e5cb; border-radius: 12px 12px 0 0; }
+.preview-android .preview-dock i { border-radius: 50%; }
+
+/* Windows retro: solid surfaces, classic navy captions and raised controls. */
+html[data-style="winretro"][data-theme] { --accent: #000080; --accent-soft: #00008022; --surface: #c0c0c0; --surface-raised: #dfdfdf; --surface-sidebar: #b4b4b4; --ink: #000; --line: #808080; --total-taskbar-height: calc(48px + var(--safe-bottom)); }
+html[data-style="winretro"][data-theme="dark"] { --surface: #383838; --surface-raised: #4c4c4c; --surface-sidebar: #292929; --ink: #fff; --line: #777; --accent: #7d9cde; --accent-soft: #7d9cde33; }
+html[data-style="winretro"][data-theme] :is(body, #root) { font-family: Tahoma, "MS Sans Serif", Arial, sans-serif; }
+html[data-style="winretro"][data-theme] :is(.os-window, .taskbar, .start-menu, .settings-card, .context-menu, .action-center, .widgets-panel, .toast) { border-radius: 0; background: var(--surface); color: var(--ink); border: 2px outset var(--surface-raised); backdrop-filter: none; box-shadow: 2px 2px 0 #0008; }
+html[data-style="winretro"][data-theme] .os-window-titlebar { background: linear-gradient(90deg, #000080, #1084d0); color: #fff; min-height: 30px; padding: 3px 4px; }
+html[data-style="winretro"][data-theme] .os-window-controls { gap: 3px; }
+html[data-style="winretro"][data-theme] .os-window-controls button { border-radius: 0; border: 2px outset var(--surface-raised); background: var(--surface); color: var(--ink); width: 24px; height: 24px; }
+html[data-style="winretro"][data-theme] .taskbar { padding: 4px 6px var(--safe-bottom); gap: 8px; }
+html[data-style="winretro"][data-theme] .start-btn { display: flex; gap: 6px; width: auto; padding: 0 8px; font-size: 1rem; font-weight: 700; }
+html[data-style="winretro"][data-theme] :is(.start-btn, .taskbar-app) { border: 2px outset var(--surface-raised); border-radius: 0; color: var(--ink); }
+html[data-style="winretro"][data-theme] :is(.start-btn.active, .taskbar-app.active) { border-style: inset; background: var(--surface-raised); }
+html[data-style="winretro"][data-theme] .taskbar-center { position: static; transform: none; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+html[data-style="winretro"][data-theme] .taskbar-app { flex-shrink: 0; }
+html[data-style="winretro"][data-theme] .taskbar-search { display: none; }
+html[data-style="winretro"][data-theme] .taskbar-right { flex-shrink: 0; border: 2px inset var(--surface-raised); }
+html[data-style="winretro"][data-theme] .start-menu { left: 4px; transform: none; width: 380px; max-width: calc(100vw - 8px); }
+html[data-style="winretro"][data-theme] .start-pinned-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html[data-style="winretro"][data-theme] :is(.start-search, .start-tile, .start-tile-icon, .ac-toggle, .desktop-icon-img) { border-radius: 0; }
+html[data-style="winretro"][data-theme] .start-footer { background: var(--surface-sidebar); }
+html[data-style="winretro"][data-theme] :is(.boot-screen, .lock-screen) { background: #008080; }
+.preview-winretro .preview-dock { bottom: 0; width: 100%; height: 15px; background: #c0c0c0; border-top: 2px solid #fff; }
+.preview-winretro .preview-window { border-radius: 0; border: 2px outset #eee; background: #c0c0c0; }
+.preview-winretro .preview-window::before { background: #000080; border-radius: 0; }
+@media (max-width: 768px), (max-height: 540px) {
+  :is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .taskbar { left: 8px; right: 8px; gap: 4px; }
+  :is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(.taskbar-tray, .taskbar-notif-btn, .taskbar-left > button:not(.start-btn)) { display: none; }
+  :is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .taskbar-center { justify-content: flex-start; }
+  :is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] .os-window { border-radius: 0; }
+  :is(html[data-style="fuchsia"], html[data-style="android"])[data-theme] :is(.widgets-panel, .action-center) { max-height: calc(100dvh - var(--total-taskbar-height) - 16px); }
+  html[data-style="winretro"][data-theme] :is(.taskbar-tray, .taskbar-notif-btn, .taskbar-left > button:not(.start-btn)) { display: none; }
+}
