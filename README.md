@@ -359,8 +359,18 @@ may finish in the background. Switching sessions, sending another prompt, or
 closing the chat also stops playback.
 
 The microphone button uses browser `SpeechRecognition` / `webkitSpeechRecognition`
-and requests microphone permission when clicked. It appends final transcripts to
-the editable prompt without sending them. Click again to finish dictation.
+and requests microphone permission when activated. Hold the microphone button to
+speak, then release to finish. With the button focused, hold Space or Enter.
+You can also hold Space elsewhere in the active chat window without focusing the
+microphone. This shortcut is disabled in the prompt box, other editable fields,
+and interactive controls, so typing spaces never starts recognition. Switching
+focus or releasing Space finishes shortcut dictation; switching away from the
+browser or hiding the tab also stops recording.
+
+A recording indicator and live transcript appear while listening. Recognized
+text is appended to the editable prompt without sending it. Pending words are
+preserved if the browser ends recognition without a final result, and finalized
+segments are inserted only once. Review and edit the transcript before sending.
 Recognition uses the browser language. Unsupported browsers disable the button;
 HTTPS or localhost is required. Browser dictation and browser voices may use
 online services; Piper speech inference runs locally. Piper's default runtime

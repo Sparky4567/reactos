@@ -5,6 +5,7 @@ import { useChatPersistence } from "@/chat/usePersistence";
 import { MemoryReview } from "./MemoryReview";
 import { useVoice } from "@/chat/useVoice";
 import { Markdown } from "@/components/Markdown";
+import { useOS } from "@/os/store";
 
 const SETTINGS_KEY = "reactos.ollama.settings";
 
@@ -30,6 +31,7 @@ function loadSettings(): Settings {
 }
 
 export function Chatbot({ windowId }: { windowId?: string }) {
+  const { state: desktop } = useOS();
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [hostDraft, setHostDraft] = useState(settings.host);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -53,6 +55,50 @@ export function Chatbot({ windowId }: { windowId?: string }) {
   const [sending, setSending] = useState(false);
   const voice = useVoice(session.id, text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text));
   const scrollRef = useRef<HTMLDivElement>(null);
+  const voiceRef = useRef(voice); voiceRef.current = voice;
+  const shortcutEnabled = desktop.activeId === windowId && !desktop.locked &&
+    !desktop.startOpen && !desktop.widgetsOpen && !desktop.actionCenterOpen && !desktop.contextMenu &&
+    persistence.ready && !sending && !!settings.model && voice.dictationSupported;
+
+  useEffect(() => {
+    if (!shortcutEnabled) return;
+    let spaceHeld = false;
+    const finish = () => {
+      if (!spaceHeld) return;
+      spaceHeld = false;
+      voiceRef.current.finishDictation();
+    };
+    const keydown = (event: KeyboardEvent) => {
+      if (event.code !== 'Space' || event.defaultPrevented || event.isComposing ||
+          event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+      // Preserve typing, native control activation, and the microphone's own handler.
+      const target = event.target;
+      if (target instanceof Element && target.closest(
+        'input, textarea, select, button, a[href], [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="slider"], [role="button"], [role="checkbox"], [role="radio"], [role="switch"], [role="menuitem"]'
+      )) return;
+      event.preventDefault();
+      if (event.repeat || spaceHeld) return;
+      spaceHeld = true;
+      voiceRef.current.dictate();
+    };
+    const keyup = (event: KeyboardEvent) => {
+      if (event.code !== 'Space' || !spaceHeld) return;
+      event.preventDefault();
+      finish();
+    };
+    const focus = () => finish();
+    window.addEventListener('keydown', keydown);
+    window.addEventListener('keyup', keyup);
+    window.addEventListener('blur', finish);
+    document.addEventListener('focusin', focus);
+    return () => {
+      window.removeEventListener('keydown', keydown);
+      window.removeEventListener('keyup', keyup);
+      window.removeEventListener('blur', finish);
+      document.removeEventListener('focusin', focus);
+      finish();
+    };
+  }, [shortcutEnabled, session.id]);
 
   useEffect(() => {
     try {
@@ -355,6 +401,10 @@ export function Chatbot({ windowId }: { windowId?: string }) {
         ))}
       </div>
 
+      <div className={`chatbot-recording-status${voice.listening ? " is-recording" : ""}`} role="status" aria-live="polite">
+        {voice.listening && <span className="chatbot-recording-dot" aria-hidden="true" />}
+        {voice.interim || (voice.listening ? "Listening… release to finish" : "Hold the microphone to speak, or hold Space when not typing")}
+      </div>
       <div className="chatbot-input">
         <textarea
           value={input}
@@ -364,10 +414,29 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           disabled={sending || !settings.model}
           rows={2}
         />
-        <button onClick={voice.dictate} disabled={!voice.dictationSupported || sending || !settings.model}
-          aria-label={voice.listening ? "Stop dictation" : "Dictate message"} aria-pressed={voice.listening}
-          title={voice.dictationSupported ? "Dictate using browser speech recognition (may use online services)" : "Dictation unavailable: use a supported browser on HTTPS or localhost"}>
-          <i className={`fa ${voice.listening ? "fa-stop" : "fa-microphone"}`} />
+        <button className={`chatbot-microphone${voice.listening ? " is-recording" : ""}`}
+          onPointerDown={e => {
+            if (!e.isPrimary || e.button !== 0) return;
+            e.preventDefault(); e.currentTarget.focus();
+            e.currentTarget.setPointerCapture(e.pointerId); voice.dictate();
+          }}
+          onPointerUp={voice.finishDictation}
+          onPointerCancel={voice.finishDictation}
+          onLostPointerCapture={voice.finishDictation}
+          onBlur={voice.finishDictation}
+          onContextMenu={e => e.preventDefault()}
+          onKeyDown={e => {
+            if (e.key === " " || e.key === "Enter") {
+              e.preventDefault(); if (!e.repeat) voice.dictate();
+            }
+          }}
+          onKeyUp={e => {
+            if (e.key === " " || e.key === "Enter") { e.preventDefault(); voice.finishDictation(); }
+          }}
+          disabled={!voice.dictationSupported || sending || !settings.model}
+          aria-label="Hold to speak; release to finish" aria-pressed={voice.listening}
+          title={voice.dictationSupported ? "Hold to speak (or hold Space / Enter). Release to finish; review before sending." : "Dictation unavailable: use a supported browser on HTTPS or localhost"}>
+          <i className="fa fa-microphone" aria-hidden="true" />
         </button>
         <button onClick={send} disabled={sending || !input.trim() || !settings.model} title="Send">
           <i className={`fa ${sending ? "fa-spinner fa-spin" : "fa-paper-plane"}`} />

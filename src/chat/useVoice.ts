@@ -7,6 +7,7 @@ const VOICES = { piper: 'en_US-amy-medium', 'piper-small': 'en_US-lessac-low' } 
 type PiperMode = keyof typeof VOICES;
 interface Recognition {
   lang: string; continuous: boolean; interimResults: boolean;
+  onstart: (() => void) | null;
   onresult: ((event: { results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
@@ -50,6 +51,8 @@ export function useVoice(context: string, append: (text: string) => void) {
   const [busy, setBusy] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState('');
+  const holding = useRef(false);
   const currentMode = useRef(mode);
   const generation = useRef(0);
   const mounted = useRef(true);
@@ -69,10 +72,11 @@ export function useVoice(context: string, append: (text: string) => void) {
     if (mounted.current) { setBusy(false); setPlaying(false); setStatus(''); }
   };
   const stopListening = () => {
+    holding.current = false;
     const r = recognition.current;
     recognition.current = null;
-    if (r) { r.onresult = r.onerror = r.onend = null; r.abort(); }
-    if (mounted.current) setListening(false);
+    if (r) { r.onresult = r.onerror = r.onend = r.onstart = null; r.abort(); }
+    if (mounted.current) { setListening(false); setInterim(''); }
   };
   useEffect(() => {
     mounted.current = true;
@@ -129,22 +133,72 @@ export function useVoice(context: string, append: (text: string) => void) {
       if (id === generation.current && mounted.current) { stop(); report(`Speech unavailable: ${(e as Error).message}. Try On [Web] or Read aloud.`); }
     }
   };
+  const finishDictation = () => {
+    if (!holding.current) return;
+    holding.current = false;
+    // stop(), unlike abort(), delivers the final words spoken before release.
+    recognition.current?.stop();
+    if (mounted.current) setListening(false);
+  };
+  useEffect(() => {
+    const release = () => finishDictation();
+    const hide = () => { if (document.hidden) release(); };
+    window.addEventListener('blur', release);
+    document.addEventListener('visibilitychange', hide);
+    return () => {
+      window.removeEventListener('blur', release);
+      document.removeEventListener('visibilitychange', hide);
+    };
+  }, []);
   const dictate = () => {
-    if (recognition.current) { recognition.current.stop(); return; }
+    if (recognition.current) return;
     const Constructor = recognitionConstructor();
     if (!Constructor || !dictationSupported) return;
-    stop();
+    stop(); holding.current = true;
     const r = new Constructor(); recognition.current = r;
-    r.lang = navigator.language || 'en-US'; r.continuous = false; r.interimResults = false;
+    r.lang = navigator.language || 'en-US'; r.continuous = true; r.interimResults = true;
+    let delivered = 0;
+    let pending = '';
+    r.onstart = () => {
+      if (recognition.current !== r) return;
+      if (!holding.current) return;
+      setListening(true);
+    };
     r.onresult = event => {
       if (recognition.current !== r) return;
-      const text = Array.from(event.results).filter(result => result.isFinal).map(result => result[0].transcript).join(' ');
-      if (text) appendRef.current(text);
+      const results = Array.from(event.results);
+      const final: string[] = [];
+      while (delivered < results.length && results[delivered]!.isFinal) {
+        final.push(results[delivered]![0].transcript); delivered++;
+      }
+      if (final.length) appendRef.current(final.join(' '));
+      pending = results.slice(delivered).map(result => result[0].transcript).join(' ');
+      setInterim(pending);
     };
-    r.onerror = event => report(`Microphone: ${event.error}. Check microphone permission and browser support.`);
-    r.onend = () => { if (recognition.current === r) { recognition.current = null; setListening(false); } };
-    try { r.start(); setListening(true); }
-    catch (e) { recognition.current = null; setListening(false); report((e as Error).message); }
+    r.onerror = event => {
+      if (recognition.current !== r) return;
+      if (event.error === 'no-speech') return;
+      pending = '';
+      holding.current = false; setListening(false); setInterim('');
+      report(`Microphone: ${event.error}. Check microphone permission and browser support.`);
+    };
+    r.onend = () => {
+      if (recognition.current !== r) return;
+      // Some engines end after stop() without promoting the last interim result.
+      // Final results already delivered above have been removed from pending.
+      if (pending.trim()) appendRef.current(pending);
+      pending = '';
+      setInterim('');
+      // Some browsers end recognition after silence, even in continuous mode.
+      if (holding.current) {
+        delivered = 0;
+        try { r.start(); return; }
+        catch (e) { report((e as Error).message); }
+      }
+      holding.current = false; recognition.current = null; setListening(false);
+    };
+    try { r.start(); }
+    catch (e) { holding.current = false; recognition.current = null; setListening(false); report((e as Error).message); }
   };
-  return { mode, choose, enablePiper, speak, stop, stopListening, dictate, status, busy, playing, listening, webSupported, dictationSupported };
+  return { mode, choose, enablePiper, speak, stop, stopListening, dictate, finishDictation, interim, status, busy, playing, listening, webSupported, dictationSupported };
 }
