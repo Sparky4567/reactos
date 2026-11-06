@@ -6,6 +6,8 @@ const styles: { id: DesktopStyle; name: string; description: string }[] = [
   { id: 'fuchsia', name: 'Google Fuchsia', description: 'Magenta accents · Floating dock · Layered cards' },
   { id: 'winretro', name: 'Windows retro', description: 'Classic Start · Beveled edges · Teal desktop' },
   { id: 'android', name: 'Android', description: 'Material colors · Pill controls · Rounded panels' },
+  { id: 'matrix', name: 'Matrix terminal', description: 'Phosphor green · Monospace · Scanline grid' },
+  { id: 'cyberpunk', name: 'Cyberpunk terminal', description: 'Neon cyan · Magenta glow · Circuit grid' },
   { id: 'chromeos', name: 'ChromeOS', description: 'Floating shelf · Rounded cards · Soft colors' },
 ];
 export function AppearanceChooser() {
