@@ -3,6 +3,7 @@ import { appearanceRoutes } from "./appearance/database";
 import { galleryRoutes } from "./gallery/database";
 import { ChatDatabase, chatStateRoutes } from "./chat/database";
 import { resolve } from "node:path";
+import { networkInterfaces } from "node:os";
 import index from "./index.html";
 import { Ollama } from "ollama-node";
 
@@ -23,6 +24,16 @@ function getPort(): number {
 }
 
 
+function getHostname(): string {
+  const argIndex = process.argv.indexOf("--hostname");
+  if (argIndex !== -1) {
+    const value = process.argv[argIndex + 1]?.trim();
+    if (!value || value.startsWith("--")) throw new Error("--hostname requires an address, for example 0.0.0.0");
+    return value;
+  }
+  return process.env.HOST?.trim() || "0.0.0.0";
+}
+
 function normalizeOllamaHost(input?: string | null): string {
   let h = (input ?? "127.0.0.1").trim();
   h = h.replace(/^https?:\/\//i, "");
@@ -40,6 +51,7 @@ const appearance = appearanceRoutes(chatDatabase.db);
 
 const server = serve({
   port: getPort(),
+  hostname: getHostname(),
   idleTimeout: 255,
   routes: {
     // Serve index.html for all unmatched routes.
@@ -252,3 +264,13 @@ const server = serve({
 });
 
 console.log(`🚀 Server running at ${server.url}`);
+if (server.hostname === "0.0.0.0" || server.hostname === "::") {
+  console.log(`Local: http://localhost:${server.port}`);
+  for (const addresses of Object.values(networkInterfaces())) {
+    for (const address of addresses ?? []) {
+      if (address.family === "IPv4" && !address.internal) {
+        console.log(`Network: http://${address.address}:${server.port}`);
+      }
+    }
+  }
+}

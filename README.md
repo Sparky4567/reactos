@@ -111,6 +111,47 @@ bun dev -- --port 4000
 PORT=4000 bun start
 ```
 
+### Access from another device on your local network
+
+Start the server with an explicit bind to all IPv4 interfaces:
+
+```sh
+bun run dev:lan
+# Or run without development hot reloading:
+bun run start:lan
+```
+
+Open a printed **Network** URL on another device connected to the same network,
+for example **http://192.168.0.188:3000**. Include `:3000`: an address without a
+port uses port 80. Use the IP address of the computer running Bun; `localhost`
+on a phone or another computer refers to that device itself. `0.0.0.0` is a bind
+address, not the address to enter in a browser.
+
+Both ordinary startup commands also default to `0.0.0.0`. To choose an interface
+or port explicitly, use `--hostname` / `--port`, or `HOST` / `PORT` (command-line
+options take priority):
+
+```sh
+bun run dev:lan -- --port 4000
+bun dev -- --hostname 127.0.0.1 --port 3000
+HOST=192.168.0.188 PORT=3000 bun start
+```
+
+If localhost works but the Network URL does not, check that the host firewall
+allows inbound TCP connections to the selected port on your private network.
+Guest Wi-Fi or access-point client isolation can prevent devices from connecting.
+For Bun running inside WSL, a VM, or a container, the printed address may belong
+to its virtual network; publish/forward the port or configure bridged/mirrored
+networking, then use the host computer's LAN address. Restart the server after
+changing startup options. These scripts configure Bun's listener; they do not
+change firewall rules or port forwarding.
+
+Plain HTTP over a LAN IP can serve the desktop, but microphone recognition and
+Piper require HTTPS or localhost. For voice features on another device, serve
+through HTTPS with a certificate trusted by that device. Enabling LAN access
+shares this server's chat, memories, settings, and Gallery with devices that can
+reach it; the desktop lock screen does not authenticate server API requests.
+
 ## Default credentials
 
 - Default password: admin

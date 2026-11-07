@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot src/index.ts",
+    "dev:lan": "bun --hot src/index.ts --hostname 0.0.0.0",
     "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
     "start": "NODE_ENV=production bun src/index.ts",
+    "start:lan": "NODE_ENV=production bun src/index.ts --hostname 0.0.0.0",
     "typecheck": "bun check",
     "test": "bun test"
   },
