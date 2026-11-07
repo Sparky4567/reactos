@@ -24,6 +24,7 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - Selectable chatbot speech: local Piper with download consent, browser speech, or Off
 - Browser voice dictation into editable chatbot prompts
 - Toggleable continuous listening with a configurable wake word or phrase
+- Optional automatic sending of completed voice prompts in either listening mode
 - Memory review, search, editing, importance controls, and individual or bulk deletion
 - Interface-wide font scaling, including application controls and Markdown
 - Settings for desktop style, light/dark mode, wallpaper, password, and mobile-friendly navigation
@@ -380,14 +381,35 @@ focus or releasing Space finishes shortcut dictation; switching away from the
 browser or hiding the tab also stops recording.
 
 A recording indicator and live transcript appear while listening. Recognized
-text is appended to the editable prompt without sending it. Pending words are
+text is appended to the editable prompt. By default, it waits for manual sending. Pending words are
 preserved if the browser ends recognition without a final result, and finalized
-segments are inserted only once. Review and edit the transcript before sending.
+segments are inserted only once. With auto-send off, review and edit the transcript
+before sending.
 Recognition uses the browser language. Unsupported browsers disable the button;
 HTTPS or localhost is required. Browser dictation and browser voices may use
 online services; Piper speech inference runs locally. Piper's default runtime
 files are loaded from CDNs, so a cached model alone does not guarantee offline
 startup. ONNX Runtime is pinned to match Piper's default WASM version.
+
+### Auto-send voice prompts
+
+In **Chatbot Settings**, enable **Auto-send voice prompts** to send the current
+prompt after voice recognition completes. This option defaults to off. In
+hold-to-speak mode, sending waits for release and the recognition engine's last
+words. In continuous mode, a recognized wake-word message triggers sending;
+saying only the wake word does not send anything.
+
+Auto-send requires recognized speech: enabling the toggle or typing a message
+alone never submits the prompt. If the input already contains a draft, recognized
+speech is appended and the combined prompt is sent. Empty or cancelled dictation
+does not trigger sending. Sending also requires a selected model, ready chat
+storage, and an active, unlocked chat window in a visible tab; prompts remain
+editable if those conditions prevent sending. With auto-send off, use **Send**
+or Enter after reviewing the transcript.
+
+The auto-send preference is saved with chatbot settings in SQLite and a local
+browser copy. It does not enable the microphone or continuous listening by itself,
+and is independent of the **Speech** setting for reading replies aloud.
 
 ### Continuous listening and wake words
 
@@ -396,7 +418,7 @@ turn on **Continuous listening**. Start an utterance with the wake word, for
 example, “ReactOS, explain this project.” Matching ignores case, accepts a phrase,
 and requires whole words at the start; mid-sentence mentions do not activate it.
 The wake word is removed and the message is appended to the editable prompt for
-review. It is never sent automatically.
+review, or sent automatically when **Auto-send voice prompts** is enabled.
 
 You can also say just the wake word, pause, then speak your message within eight
 seconds. After the message or timeout, recognition waits for the wake word again.
@@ -422,7 +444,7 @@ cached models.
 | Data | Storage | Survives clearing browser storage? |
 | --- | --- | --- |
 | Chat sessions, messages, persona templates, memories and review metadata | Server SQLite | Yes, after a successful save |
-| Ollama settings, wake phrase and interface font scale | Server SQLite, with a local browser copy | Yes; restored when Chatbot loads |
+| Ollama settings, wake phrase, voice auto-send and interface font scale | Server SQLite, with a local browser copy | Yes; restored when Chatbot loads |
 | Chat voice mode and Piper download consent | Browser localStorage | No |
 | Downloaded Piper voice model | Browser origin private filesystem | No |
 | Gallery uploads and metadata | Server SQLite | Yes |

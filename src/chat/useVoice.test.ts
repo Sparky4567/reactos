@@ -5,20 +5,21 @@ import { useVoice } from './useVoice';
 
 // Server rendering supplies real hook refs without requiring a DOM or microphone.
 // Drive the browser's asynchronous recognition callbacks explicitly below.
-function withDictation(run: (voice: ReturnType<typeof useVoice>, recognition: FakeRecognition, text: string[]) => void) {
+function withDictation(run: (voice: ReturnType<typeof useVoice>, recognition: FakeRecognition, text: string[], completions: string[][]) => void) {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'window');
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {
     SpeechRecognition: FakeRecognition, isSecureContext: true,
   } });
   const text: string[] = [];
+  const completions: string[][] = [];
   let voice!: ReturnType<typeof useVoice>;
-  function Harness() { voice = useVoice('session', value => text.push(value)); return null; }
+  function Harness() { voice = useVoice('session', value => text.push(value), () => completions.push([...text])); return null; }
   try {
     renderToStaticMarkup(createElement(Harness));
     voice.dictate();
     const recognition = FakeRecognition.latest;
     recognition.onstart?.();
-    run(voice, recognition, text);
+    run(voice, recognition, text, completions);
   } finally {
     if (previous) Object.defineProperty(globalThis, 'window', previous);
     else Reflect.deleteProperty(globalThis, 'window');
@@ -67,5 +68,31 @@ test('already delivered final segments are not repeated when pending words are p
     voice.finishDictation();
     recognition.onend?.();
     expect(text).toEqual(['first sentence', 'last words']);
+  });
+});
+
+
+test('completion waits for release and includes every final and pending segment', () => {
+  withDictation((voice, recognition, text, completions) => {
+    recognition.result(['first sentence', true], ['last words', false]);
+    expect(completions).toEqual([]);
+    voice.finishDictation();
+    expect(completions).toEqual([]);
+    recognition.onend?.();
+    expect(completions).toEqual([['first sentence', 'last words']]);
+  });
+});
+
+test('empty and cancelled dictation do not complete a prompt', () => {
+  withDictation((voice, recognition, text, completions) => {
+    voice.finishDictation();
+    recognition.onend?.();
+    expect(completions).toEqual([]);
+  });
+  withDictation((voice, recognition, text, completions) => {
+    recognition.result(['cancelled words', true]);
+    voice.stopListening();
+    recognition.onend?.();
+    expect(completions).toEqual([]);
   });
 });

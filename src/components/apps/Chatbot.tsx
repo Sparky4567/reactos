@@ -22,7 +22,7 @@ function loadSettings(): Settings {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { host: parsed.host || "127.0.0.1", model: parsed.model || "", wakeWord: typeof parsed.wakeWord === "string" && parsed.wakeWord.trim() ? parsed.wakeWord.slice(0, 80) : "ReactOS", fontScale: typeof parsed.fontScale === "number" ? parsed.fontScale : 1 };
+      return { autoSend: parsed.autoSend === true, host: parsed.host || "127.0.0.1", model: parsed.model || "", wakeWord: typeof parsed.wakeWord === "string" && parsed.wakeWord.trim() ? parsed.wakeWord.slice(0, 80) : "ReactOS", fontScale: typeof parsed.fontScale === "number" ? parsed.fontScale : 1 };
     }
   } catch {}
   return { host: "127.0.0.1", model: "", fontScale: 1, wakeWord: "ReactOS" };
@@ -51,11 +51,15 @@ export function Chatbot({ windowId }: { windowId?: string }) {
   useEffect(() => () => requestRef.current?.abort(), []);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const voice = useVoice(session.id, text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text));
+  const [autoSendPending, setAutoSendPending] = useState(false);
+  const voice = useVoice(session.id, text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text), () => { if (settings.autoSend) setAutoSendPending(true); });
   const [continuousListening, setContinuousListening] = useState(false);
   const wakePaused = desktop.activeId !== windowId || desktop.locked || sending || voice.busy || voice.listening || !persistence.ready || !!persistence.error || !settings.model;
   const wake = useWakeListening(continuousListening, wakePaused, settings.wakeWord || "ReactOS", session.id,
-    text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text));
+    text => {
+      setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text);
+      if (settings.autoSend && continuousListening && text.trim()) setAutoSendPending(true);
+    });
   const scrollRef = useRef<HTMLDivElement>(null);
   const voiceRef = useRef(voice); voiceRef.current = voice;
   const shortcutEnabled = desktop.activeId === windowId && !desktop.locked &&
@@ -240,6 +244,12 @@ export function Chatbot({ windowId }: { windowId?: string }) {
     }
   };
 
+  useEffect(() => {
+    if (!autoSendPending) return;
+    setAutoSendPending(false);
+    if (settings.autoSend && desktop.activeId === windowId && !desktop.locked && !document.hidden) void send();
+  }, [autoSendPending]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -319,14 +329,17 @@ export function Chatbot({ windowId }: { windowId?: string }) {
 
       {settingsOpen && (
         <div className="chatbot-settings">
-          <p className="chatbot-hint">Speech reads completed replies. Piper Small uses English Lessac low; Piper Medium uses English Amy medium. Both downloads are about 63 MB and cached in this browser. Web uses your browser’s default voice. Browser speech and dictation may use online services. Voice input requires HTTPS or localhost and microphone permission; review the transcript before sending.</p>
+          <p className="chatbot-hint">Speech reads completed replies. Piper Small uses English Lessac low; Piper Medium uses English Amy medium. Both downloads are about 63 MB and cached in this browser. Web uses your browser’s default voice. Browser speech and dictation may use online services. Voice input requires HTTPS or localhost and microphone permission; transcripts are sent automatically only when Auto-send voice prompts is enabled.</p>
           {(voice.mode === "piper" || voice.mode === "piper-small") && <button disabled={voice.busy} onClick={() => void voice.enablePiper()}>Load / retry Piper voice</button>}
           <label htmlFor="chatbot-wake-word">Wake word or phrase</label>
           <input id="chatbot-wake-word" maxLength={80} value={settings.wakeWord ?? "ReactOS"}
             onChange={e => setSettings(s => ({ ...s, wakeWord: e.target.value || "ReactOS" }))} />
+          <label><input type="checkbox" checked={settings.autoSend === true}
+            onChange={e => setSettings(s => ({ ...s, autoSend: e.target.checked }))} /> Auto-send voice prompts</label>
+          <p className="chatbot-hint">Send the prompt after releasing the microphone or Space, or after a wake-word message is recognized in continuous mode. When off, review the transcript and send it manually. Typed messages require Send or Enter.</p>
           <label><input type="checkbox" checked={continuousListening} disabled={!voice.dictationSupported}
             onChange={e => { voice.stopListening(); setContinuousListening(e.target.checked); }} /> Continuous listening</label>
-          <p className="chatbot-hint">Start a sentence with your wake word, followed by your message. You can also say the wake word, pause, then speak within 8 seconds. Other speech is ignored. Messages appear for review before sending. Listening pauses while the chatbot is inactive, the page is hidden, or a reply is in progress. Enable it again after reopening the chatbot. Browser recognition may send audio to an online service even while waiting for the wake word.</p>
+          <p className="chatbot-hint">Start a sentence with your wake word, followed by your message. You can also say the wake word, pause, then speak within 8 seconds. Other speech is ignored. Messages appear for review when auto-send is off. Listening pauses while the chatbot is inactive, the page is hidden, or a reply is in progress. Enable it again after reopening the chatbot. Browser recognition may send audio to an online service even while waiting for the wake word.</p>
           {!voice.dictationSupported && <p className="chatbot-hint">Continuous listening requires a browser with speech recognition, HTTPS or localhost, and microphone permission.</p>}
           <label>Ollama host</label>
           <div className="chatbot-settings-row">
@@ -445,7 +458,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           }}
           disabled={continuousListening || !voice.dictationSupported || sending || !settings.model}
           aria-label="Hold to speak; release to finish" aria-pressed={voice.listening}
-          title={voice.dictationSupported ? "Hold to speak (or hold Space / Enter). Release to finish; review before sending." : "Dictation unavailable: use a supported browser on HTTPS or localhost"}>
+          title={voice.dictationSupported ? `Hold to speak (or hold Space / Enter). Release to ${settings.autoSend ? "send automatically" : "finish; review before sending"}.` : "Dictation unavailable: use a supported browser on HTTPS or localhost"}>
           <i className="fa fa-microphone" aria-hidden="true" />
         </button>
         <button onClick={send} disabled={sending || !input.trim() || !settings.model} title="Send">

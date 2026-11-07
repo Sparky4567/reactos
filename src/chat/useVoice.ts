@@ -45,7 +45,7 @@ function getPiper(mode: PiperMode, progress: (message: string) => void) {
   return pending;
 }
 
-export function useVoice(context: string, append: (text: string) => void) {
+export function useVoice(context: string, append: (text: string) => void, onComplete?: () => void) {
   const [mode, setMode] = useState<Mode>(load);
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
@@ -60,6 +60,7 @@ export function useVoice(context: string, append: (text: string) => void) {
   const url = useRef('');
   const recognition = useRef<Recognition | null>(null);
   const appendRef = useRef(append); appendRef.current = append;
+  const completeRef = useRef(onComplete); completeRef.current = onComplete;
   const webSupported = 'speechSynthesis' in window;
   const dictationSupported = !!recognitionConstructor() && window.isSecureContext;
   const report = (message: string) => { if (mounted.current) setStatus(message); };
@@ -159,6 +160,8 @@ export function useVoice(context: string, append: (text: string) => void) {
     r.lang = navigator.language || 'en-US'; r.continuous = true; r.interimResults = true;
     let delivered = 0;
     let pending = '';
+    let received = false;
+    let failed = false;
     r.onstart = () => {
       if (recognition.current !== r) return;
       if (!holding.current) return;
@@ -171,7 +174,7 @@ export function useVoice(context: string, append: (text: string) => void) {
       while (delivered < results.length && results[delivered]!.isFinal) {
         final.push(results[delivered]![0].transcript); delivered++;
       }
-      if (final.length) appendRef.current(final.join(' '));
+      if (final.length) { received = true; appendRef.current(final.join(' ')); }
       pending = results.slice(delivered).map(result => result[0].transcript).join(' ');
       setInterim(pending);
     };
@@ -179,6 +182,7 @@ export function useVoice(context: string, append: (text: string) => void) {
       if (recognition.current !== r) return;
       if (event.error === 'no-speech') return;
       pending = '';
+      failed = true;
       holding.current = false; setListening(false); setInterim('');
       report(`Microphone: ${event.error}. Check microphone permission and browser support.`);
     };
@@ -186,7 +190,7 @@ export function useVoice(context: string, append: (text: string) => void) {
       if (recognition.current !== r) return;
       // Some engines end after stop() without promoting the last interim result.
       // Final results already delivered above have been removed from pending.
-      if (pending.trim()) appendRef.current(pending);
+      if (pending.trim()) { received = true; appendRef.current(pending); }
       pending = '';
       setInterim('');
       // Some browsers end recognition after silence, even in continuous mode.
@@ -196,6 +200,7 @@ export function useVoice(context: string, append: (text: string) => void) {
         catch (e) { report((e as Error).message); }
       }
       holding.current = false; recognition.current = null; setListening(false);
+      if (received && !failed) completeRef.current?.();
     };
     try { r.start(); }
     catch (e) { holding.current = false; recognition.current = null; setListening(false); report((e as Error).message); }
