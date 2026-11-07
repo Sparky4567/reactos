@@ -22,7 +22,7 @@ function loadSettings(): Settings {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { autoSend: parsed.autoSend === true, host: parsed.host || "127.0.0.1", model: parsed.model || "", wakeWord: typeof parsed.wakeWord === "string" && parsed.wakeWord.trim() ? parsed.wakeWord.slice(0, 80) : "ReactOS", fontScale: typeof parsed.fontScale === "number" ? parsed.fontScale : 1 };
+      return { autoSend: parsed.autoSend === true, host: parsed.host || "127.0.0.1", model: parsed.model || "", wakeWord: typeof parsed.wakeWord === "string" ? parsed.wakeWord.slice(0, 80) : "ReactOS", fontScale: typeof parsed.fontScale === "number" ? parsed.fontScale : 1 };
     }
   } catch {}
   return { host: "127.0.0.1", model: "", fontScale: 1, wakeWord: "ReactOS" };
@@ -55,7 +55,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
   const voice = useVoice(session.id, text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text), () => { if (settings.autoSend) setAutoSendPending(true); });
   const [continuousListening, setContinuousListening] = useState(false);
   const wakePaused = desktop.activeId !== windowId || desktop.locked || sending || voice.busy || voice.listening || !persistence.ready || !!persistence.error || !settings.model;
-  const wake = useWakeListening(continuousListening, wakePaused, settings.wakeWord || "ReactOS", session.id,
+  const wake = useWakeListening(continuousListening, wakePaused, settings.wakeWord ?? "ReactOS", session.id,
     text => {
       setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text);
       if (settings.autoSend && continuousListening && text.trim()) setAutoSendPending(true);
@@ -333,7 +333,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           {(voice.mode === "piper" || voice.mode === "piper-small") && <button disabled={voice.busy} onClick={() => void voice.enablePiper()}>Load / retry Piper voice</button>}
           <label htmlFor="chatbot-wake-word">Wake word or phrase</label>
           <input id="chatbot-wake-word" maxLength={80} value={settings.wakeWord ?? "ReactOS"}
-            onChange={e => setSettings(s => ({ ...s, wakeWord: e.target.value || "ReactOS" }))} />
+            onChange={e => setSettings(s => ({ ...s, wakeWord: e.target.value }))} />
           <label><input type="checkbox" checked={settings.autoSend === true}
             onChange={e => setSettings(s => ({ ...s, autoSend: e.target.checked }))} /> Auto-send voice prompts</label>
           <p className="chatbot-hint">Send the prompt after releasing the microphone or Space, or after a wake-word message is recognized in continuous mode. When off, review the transcript and send it manually. Typed messages require Send or Enter.</p>

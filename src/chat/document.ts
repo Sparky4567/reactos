@@ -9,7 +9,7 @@ export function isChatDocument(value: unknown): value is ChatDocument {
   if (!object(value) || !object(value.settings) || !object(value.chat)) return false;
   const { chat, settings } = value;
   if (!text(settings.host) || !text(settings.model) || !finite(settings.fontScale) || settings.fontScale < 0.8 || settings.fontScale > 2) return false;
-  if (settings.wakeWord !== undefined && (!text(settings.wakeWord) || !settings.wakeWord.trim() || settings.wakeWord.length > 80)) return false;
+  if (settings.wakeWord !== undefined && (!text(settings.wakeWord) || settings.wakeWord.length > 80)) return false;
   if (settings.autoSend !== undefined && typeof settings.autoSend !== 'boolean') return false;
   if (!text(chat.activeId) || !Array.isArray(chat.sessions) || !chat.sessions.length || !Array.isArray(chat.personas) || !Array.isArray(chat.memories)) return false;
   if (!chat.sessions.every((s: unknown) => object(s) && text(s.id) && text(s.title) && text(s.persona) && typeof s.memoryEnabled === 'boolean' && Array.isArray(s.messages) && s.messages.every((m: unknown) => object(m) && text(m.id) && (m.role === 'user' || m.role === 'assistant') && text(m.content)) && unique(s.messages))) return false;

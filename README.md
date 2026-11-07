@@ -469,6 +469,10 @@ desktop is locked, and while the browser tab is hidden. Microphone errors stop
 listening and display a message; toggle it off and on to retry. Hold-to-speak and
 its keyboard shortcut are disabled while continuous mode is enabled.
 
+You can clear the wake phrase, including on mobile, without the default being
+restored. An empty phrase stays saved and pauses wake-word listening until you
+enter a new word or phrase.
+
 The wake phrase is saved with chatbot settings in SQLite. Continuous listening
 starts off and must be enabled again when reopening the chatbot. It requires a
 selected model, microphone permission, HTTPS or localhost, and a browser supporting
