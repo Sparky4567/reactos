@@ -21,6 +21,7 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - Ubuntu-style terminal with common commands, quoted paths, pipes, scripts, redirection, and history
 - Image Gallery with uploads, thumbnail browsing, zoom, rotation, download, and SQLite persistence
 - Ollama Chat with streamed Markdown responses, persistent sessions, saved persona templates, and automatic neuromorphic memory
+- Optional image recognition with a separate vision model, attachment previews, and saved image descriptions for follow-up questions
 - Selectable chatbot speech: local Piper with download consent, browser speech, or Off
 - Browser voice dictation into editable chatbot prompts
 - Toggleable continuous listening with a configurable wake word or phrase
@@ -167,7 +168,7 @@ src/
   App.tsx           # Root component
   os/               # OS state, reducer, virtual file system, app registry
   appearance/       # Desktop styles, preferences API, SQLite storage
-  chat/             # Sessions, personas, memory, voice, SQLite storage and saving
+  chat/             # Sessions, personas, memory, voice, image recognition and persistence
   gallery/          # Image upload/view API and SQLite storage
   terminal/         # Virtual shell and command tests
   components/       # Desktop, Taskbar, StartMenu, Window, apps, ...
@@ -386,6 +387,51 @@ all sessions; existing chat messages remain and can still provide conversation
 context. Editing is paused during response generation or a storage error; browsing
 and search remain available. **Back to chat** returns to the conversation.
 
+
+## Chat image recognition
+
+In **Chatbot Settings**, enable **Image recognition** and select a separate
+**Image recognition model**. The selector lists all models installed on the
+configured Ollama server, using `/api/tags`. Choose a vision model such as
+`moondream:latest`; the main chat model can remain text-only. Both settings are
+saved with the other chatbot settings. Recognition defaults to off, and the
+attachment button is disabled until recognition is enabled and a model is chosen.
+
+To get started, install a vision model on the same Ollama server used for chat,
+open Chatbot Settings, and refresh the model list. Keep your preferred model in
+the main chat selector, then enable **Image recognition** and choose the vision
+model in its separate selector. The list includes text-only models too; selecting
+a model does not guarantee vision support. Capability checks run when you send
+an image.
+
+Attach one JPEG, PNG, or WebP image, optionally add a question, then press Send.
+A preview lets you check or remove the attachment before sending. Files must be
+20 MB or smaller and under 40 megapixels. The browser resizes images to at most
+1,600 pixels on the longest edge and sends a JPEG capped at 5 MB. No additional
+browser inference library or model download is needed.
+
+The recognition model describes the image first; that description is passed to
+the main chat model alongside your question. Expand **Image** in the sent message
+to inspect the observations. Only the filename, model name, and description are
+saved in chat history, so follow-up questions use the description rather than
+reexamining the original image. Small details or text omitted from that description
+may require another upload. Originals and previews are not retained after sending.
+Image descriptions are stored with their messages in SQLite, independently of
+the Gallery. Attaching an image does not add it to the Gallery or put its
+description in `data/memories.json`; automatic memory learns the accompanying
+prompt text. The prepared image passes through the Bun server to the selected
+Ollama server for recognition.
+Voice auto-send does not submit a pending image; press Send explicitly. Turning
+recognition off, changing its model or host, or switching sessions clears a pending
+attachment. Recognition failures preserve the draft and attachment for retry.
+
+The server checks `/api/show` for the model's `vision` capability before image
+inference, and reports unsupported models or backends rather than silently treating
+an image request as text-only. Use a server implementing Ollama's image-input API.
+With ollama-lite, update to a version with multimodal support, pull the vision
+model again to install its projector, and restart the daemon. First-image CPU
+recognition can take several minutes on small hosts; requests allow up to ten
+minutes. Selecting a cloud-hosted model sends the image to that model's service.
 
 ## Chat voice
 

@@ -1,5 +1,5 @@
 import type { ChatState } from './state';
-export interface ChatSettings { host: string; model: string; fontScale: number; wakeWord?: string; autoSend?: boolean }
+export interface ChatSettings { host: string; model: string; fontScale: number; wakeWord?: string; autoSend?: boolean; imageRecognition?: boolean; imageModel?: string }
 export interface ChatDocument { chat: ChatState; settings: ChatSettings }
 const object = (v: unknown): v is Record<string, any> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const text = (v: unknown): v is string => typeof v === 'string';
@@ -10,9 +10,11 @@ export function isChatDocument(value: unknown): value is ChatDocument {
   const { chat, settings } = value;
   if (!text(settings.host) || !text(settings.model) || !finite(settings.fontScale) || settings.fontScale < 0.8 || settings.fontScale > 2) return false;
   if (settings.wakeWord !== undefined && (!text(settings.wakeWord) || settings.wakeWord.length > 80)) return false;
+  if (settings.imageRecognition !== undefined && typeof settings.imageRecognition !== 'boolean') return false;
+  if (settings.imageModel !== undefined && (!text(settings.imageModel) || settings.imageModel.length > 255)) return false;
   if (settings.autoSend !== undefined && typeof settings.autoSend !== 'boolean') return false;
   if (!text(chat.activeId) || !Array.isArray(chat.sessions) || !chat.sessions.length || !Array.isArray(chat.personas) || !Array.isArray(chat.memories)) return false;
-  if (!chat.sessions.every((s: unknown) => object(s) && text(s.id) && text(s.title) && text(s.persona) && typeof s.memoryEnabled === 'boolean' && Array.isArray(s.messages) && s.messages.every((m: unknown) => object(m) && text(m.id) && (m.role === 'user' || m.role === 'assistant') && text(m.content)) && unique(s.messages))) return false;
+  if (!chat.sessions.every((s: unknown) => object(s) && text(s.id) && text(s.title) && text(s.persona) && typeof s.memoryEnabled === 'boolean' && Array.isArray(s.messages) && s.messages.every((m: unknown) => object(m) && text(m.id) && (m.role === 'user' || m.role === 'assistant') && text(m.content) && (m.imageObservation === undefined || (m.role === 'user' && object(m.imageObservation) && text(m.imageObservation.name) && m.imageObservation.name.length <= 255 && text(m.imageObservation.model) && m.imageObservation.model.length <= 255 && text(m.imageObservation.description) && m.imageObservation.description.length <= 16000))) && unique(s.messages))) return false;
   if (!chat.sessions.some((s: { id: string }) => s.id === chat.activeId) || !unique(chat.sessions)) return false;
   if (!chat.personas.every((p: unknown) => object(p) && text(p.id) && text(p.name) && text(p.content)) || !unique(chat.personas)) return false;
   return chat.memories.every((m: unknown) => object(m) && text(m.id) && text(m.content) && finite(m.activation) && m.activation >= 0 && m.activation <= 1 && finite(m.importance) && m.importance >= 0 && m.importance <= 1 && finite(m.lastSpike) && finite(m.consolidatedAt) && ['createdAt', 'updatedAt', 'reviewedAt'].every(key => m[key] === undefined || finite(m[key])) && object(m.links) && Object.values(m.links).every(w => finite(w) && w >= 0 && w <= 1)) && unique(chat.memories);

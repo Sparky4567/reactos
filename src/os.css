@@ -1130,3 +1130,9 @@ html[data-theme="dark"] .chatbot-memory-review .memory-delete { color: #ffaaa2; 
 @media (prefers-reduced-motion: reduce) {
   .chatbot-recording-dot, .chatbot-input button.chatbot-microphone.is-recording { animation: none; }
 }
+
+.chatbot-attachment { display: flex; align-items: center; gap: 8px; flex-shrink: 0; overflow-wrap: anywhere; }
+.chatbot-attachment img { flex-shrink: 0; border-radius: 4px; }
+.chatbot-attachment button { margin-left: auto; flex-shrink: 0; }
+.chatbot-bubble details { margin-top: 8px; overflow-wrap: anywhere; }
+.chatbot-bubble summary { cursor: pointer; }

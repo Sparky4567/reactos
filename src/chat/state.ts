@@ -1,5 +1,6 @@
 import type { Trace } from './memory';
-export interface Msg { id: string; role: 'user' | 'assistant'; content: string }
+export interface ImageObservation { name: string; model: string; description: string }
+export interface Msg { id: string; role: 'user' | 'assistant'; content: string; imageObservation?: ImageObservation }
 export interface Session { id: string; title: string; messages: Msg[]; persona: string; memoryEnabled: boolean }
 export interface Persona { id: string; name: string; content: string }
 export interface ChatState { sessions: Session[]; activeId: string; personas: Persona[]; memories: Trace[] }

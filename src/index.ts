@@ -1,11 +1,11 @@
 import { serve } from "bun";
+import { visionRoute } from "./chat/vision";
 import { appearanceRoutes } from "./appearance/database";
 import { galleryRoutes } from "./gallery/database";
 import { ChatDatabase, chatStateRoutes } from "./chat/database";
 import { resolve } from "node:path";
 import { networkInterfaces } from "node:os";
 import index from "./index.html";
-import { Ollama } from "ollama-node";
 
 function getPort(): number {
   const argIndex = process.argv.indexOf("--port");
@@ -143,14 +143,21 @@ const server = serve({
         const url = new URL(req.url);
         const host = normalizeOllamaHost(url.searchParams.get("host"));
         try {
-          const ollama = new Ollama(host);
-          const data = await ollama.listModels();
-          return Response.json({ host, models: data.models, complete: data.complete });
+          const response = await fetch(`http://${host}:11434/api/tags`, { signal: AbortSignal.timeout(10_000) });
+          if (!response.ok) throw new Error(`Could not list models (HTTP ${response.status}).`);
+          const data = await response.json() as { models?: { name?: string }[] };
+          const models = Array.isArray(data.models) ? data.models.flatMap(model => typeof model.name === "string" ? [model.name] : []) : [];
+          return Response.json({ host, models });
         } catch (e) {
           return Response.json({ host, error: (e as Error).message, models: [], complete: [] }, { status: 502 });
         }
       },
     },
+
+    "/api/ollama/vision": { POST(req, server) {
+      server.timeout(req, 0);
+      return visionRoute(normalizeOllamaHost)(req);
+    } },
 
     "/api/ollama/chat": {
       async POST(req) {
