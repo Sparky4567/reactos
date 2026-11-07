@@ -3,17 +3,15 @@ import { loadChat, newSession, type Msg } from "@/chat/state";
 import { recall, remember } from "@/chat/memory";
 import { useChatPersistence } from "@/chat/usePersistence";
 import { MemoryReview } from "./MemoryReview";
+import { useWakeListening } from "@/chat/useWakeListening";
+import type { ChatSettings } from "@/chat/document";
 import { useVoice } from "@/chat/useVoice";
 import { Markdown } from "@/components/Markdown";
 import { useOS } from "@/os/store";
 
 const SETTINGS_KEY = "reactos.ollama.settings";
 
-interface Settings {
-  host: string;
-  model: string;
-  fontScale: number;
-}
+type Settings = ChatSettings;
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -24,10 +22,10 @@ function loadSettings(): Settings {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { host: parsed.host || "127.0.0.1", model: parsed.model || "", fontScale: typeof parsed.fontScale === "number" ? parsed.fontScale : 1 };
+      return { host: parsed.host || "127.0.0.1", model: parsed.model || "", wakeWord: typeof parsed.wakeWord === "string" && parsed.wakeWord.trim() ? parsed.wakeWord.slice(0, 80) : "ReactOS", fontScale: typeof parsed.fontScale === "number" ? parsed.fontScale : 1 };
     }
   } catch {}
-  return { host: "127.0.0.1", model: "", fontScale: 1 };
+  return { host: "127.0.0.1", model: "", fontScale: 1, wakeWord: "ReactOS" };
 }
 
 export function Chatbot({ windowId }: { windowId?: string }) {
@@ -54,11 +52,15 @@ export function Chatbot({ windowId }: { windowId?: string }) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const voice = useVoice(session.id, text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text));
+  const [continuousListening, setContinuousListening] = useState(false);
+  const wakePaused = desktop.activeId !== windowId || desktop.locked || sending || voice.busy || voice.listening || !persistence.ready || !!persistence.error || !settings.model;
+  const wake = useWakeListening(continuousListening, wakePaused, settings.wakeWord || "ReactOS", session.id,
+    text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text));
   const scrollRef = useRef<HTMLDivElement>(null);
   const voiceRef = useRef(voice); voiceRef.current = voice;
   const shortcutEnabled = desktop.activeId === windowId && !desktop.locked &&
     !desktop.startOpen && !desktop.widgetsOpen && !desktop.actionCenterOpen && !desktop.contextMenu &&
-    persistence.ready && !sending && !!settings.model && voice.dictationSupported;
+    persistence.ready && !continuousListening && !sending && !!settings.model && voice.dictationSupported;
 
   useEffect(() => {
     if (!shortcutEnabled) return;
@@ -311,6 +313,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
         }}>Delete session</button>
       </div>
       <div className="chatbot-banner" role="status">{persistence.status}</div>
+      {wake.error && <div className="chatbot-banner chatbot-error" role="alert">{wake.error}</div>}
       {voice.status && <div className="chatbot-banner" role="status">{voice.status}</div>}
       {persistence.error && <div role="alert" className="chatbot-banner chatbot-error">{persistence.error} Unsaved changes remain in this window. <button onClick={() => void persistence.retrySave()}>Retry save</button> <button onClick={() => { if (confirm("Reload saved data? Unsaved changes in this window will be discarded.")) window.location.reload(); }}>Reload saved data</button></div>}
 
@@ -318,6 +321,13 @@ export function Chatbot({ windowId }: { windowId?: string }) {
         <div className="chatbot-settings">
           <p className="chatbot-hint">Speech reads completed replies. Piper Small uses English Lessac low; Piper Medium uses English Amy medium. Both downloads are about 63 MB and cached in this browser. Web uses your browser’s default voice. Browser speech and dictation may use online services. Voice input requires HTTPS or localhost and microphone permission; review the transcript before sending.</p>
           {(voice.mode === "piper" || voice.mode === "piper-small") && <button disabled={voice.busy} onClick={() => void voice.enablePiper()}>Load / retry Piper voice</button>}
+          <label htmlFor="chatbot-wake-word">Wake word or phrase</label>
+          <input id="chatbot-wake-word" maxLength={80} value={settings.wakeWord ?? "ReactOS"}
+            onChange={e => setSettings(s => ({ ...s, wakeWord: e.target.value || "ReactOS" }))} />
+          <label><input type="checkbox" checked={continuousListening} disabled={!voice.dictationSupported}
+            onChange={e => { voice.stopListening(); setContinuousListening(e.target.checked); }} /> Continuous listening</label>
+          <p className="chatbot-hint">Start a sentence with your wake word, followed by your message. You can also say the wake word, pause, then speak within 8 seconds. Other speech is ignored. Messages appear for review before sending. Listening pauses while the chatbot is inactive, the page is hidden, or a reply is in progress. Enable it again after reopening the chatbot. Browser recognition may send audio to an online service even while waiting for the wake word.</p>
+          {!voice.dictationSupported && <p className="chatbot-hint">Continuous listening requires a browser with speech recognition, HTTPS or localhost, and microphone permission.</p>}
           <label>Ollama host</label>
           <div className="chatbot-settings-row">
             <input
@@ -403,7 +413,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
 
       <div className={`chatbot-recording-status${voice.listening ? " is-recording" : ""}`} role="status" aria-live="polite">
         {voice.listening && <span className="chatbot-recording-dot" aria-hidden="true" />}
-        {voice.interim || (voice.listening ? "Listening… release to finish" : "Hold the microphone to speak, or hold Space when not typing")}
+        {wake.status || (continuousListening ? (wake.error ? "Continuous listening stopped" : "Continuous listening paused") : "") || voice.interim || (voice.listening ? "Listening… release to finish" : "Hold the microphone to speak, or hold Space when not typing")}
       </div>
       <div className="chatbot-input">
         <textarea
@@ -433,7 +443,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           onKeyUp={e => {
             if (e.key === " " || e.key === "Enter") { e.preventDefault(); voice.finishDictation(); }
           }}
-          disabled={!voice.dictationSupported || sending || !settings.model}
+          disabled={continuousListening || !voice.dictationSupported || sending || !settings.model}
           aria-label="Hold to speak; release to finish" aria-pressed={voice.listening}
           title={voice.dictationSupported ? "Hold to speak (or hold Space / Enter). Release to finish; review before sending." : "Dictation unavailable: use a supported browser on HTTPS or localhost"}>
           <i className="fa fa-microphone" aria-hidden="true" />

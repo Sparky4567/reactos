@@ -5,7 +5,7 @@ const KEY = 'reactos.chat.voice';
 // Both voices support the phonemizer's extended IDs, including syllabic mark 144.
 const VOICES = { piper: 'en_US-amy-medium', 'piper-small': 'en_US-lessac-low' } as const;
 type PiperMode = keyof typeof VOICES;
-interface Recognition {
+export interface Recognition {
   lang: string; continuous: boolean; interimResults: boolean;
   onstart: (() => void) | null;
   onresult: ((event: { results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
@@ -13,7 +13,7 @@ interface Recognition {
   onend: (() => void) | null;
   start(): void; stop(): void; abort(): void;
 }
-function recognitionConstructor() {
+export function recognitionConstructor() {
   const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
   return w.SpeechRecognition || w.webkitSpeechRecognition;
 }

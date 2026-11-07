@@ -23,6 +23,7 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - Ollama Chat with streamed Markdown responses, persistent sessions, saved persona templates, and automatic neuromorphic memory
 - Selectable chatbot speech: local Piper with download consent, browser speech, or Off
 - Browser voice dictation into editable chatbot prompts
+- Toggleable continuous listening with a configurable wake word or phrase
 - Memory review, search, editing, importance controls, and individual or bulk deletion
 - Interface-wide font scaling, including application controls and Markdown
 - Settings for desktop style, light/dark mode, wallpaper, password, and mobile-friendly navigation
@@ -388,6 +389,30 @@ online services; Piper speech inference runs locally. Piper's default runtime
 files are loaded from CDNs, so a cached model alone does not guarantee offline
 startup. ONNX Runtime is pinned to match Piper's default WASM version.
 
+### Continuous listening and wake words
+
+In **Chatbot Settings**, set **Wake word or phrase** (default: **ReactOS**) and
+turn on **Continuous listening**. Start an utterance with the wake word, for
+example, “ReactOS, explain this project.” Matching ignores case, accepts a phrase,
+and requires whole words at the start; mid-sentence mentions do not activate it.
+The wake word is removed and the message is appended to the editable prompt for
+review. It is never sent automatically.
+
+You can also say just the wake word, pause, then speak your message within eight
+seconds. After the message or timeout, recognition waits for the wake word again.
+Continuous listening restarts after normal recognition endings and pauses during
+response generation or speech playback, while the chatbot is inactive or the
+desktop is locked, and while the browser tab is hidden. Microphone errors stop
+listening and display a message; toggle it off and on to retry. Hold-to-speak and
+its keyboard shortcut are disabled while continuous mode is enabled.
+
+The wake phrase is saved with chatbot settings in SQLite. Continuous listening
+starts off and must be enabled again when reopening the chatbot. It requires a
+selected model, microphone permission, HTTPS or localhost, and a browser supporting
+speech recognition. This uses the existing browser recognition engine for both
+wake detection and dictation; audio may be sent to an online service even while
+waiting for the wake word.
+
 Voice mode and download consent stay in browser localStorage, independently of
 server chat settings. Clearing browser storage resets the mode to Off and removes
 cached models.
@@ -397,7 +422,7 @@ cached models.
 | Data | Storage | Survives clearing browser storage? |
 | --- | --- | --- |
 | Chat sessions, messages, persona templates, memories and review metadata | Server SQLite | Yes, after a successful save |
-| Ollama settings and interface font scale | Server SQLite, with a local browser copy | Yes; restored when Chatbot loads |
+| Ollama settings, wake phrase and interface font scale | Server SQLite, with a local browser copy | Yes; restored when Chatbot loads |
 | Chat voice mode and Piper download consent | Browser localStorage | No |
 | Downloaded Piper voice model | Browser origin private filesystem | No |
 | Gallery uploads and metadata | Server SQLite | Yes |
