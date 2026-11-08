@@ -79,6 +79,26 @@ export function Chatbot({ windowId }: { windowId?: string }) {
   const [autoSendPending, setAutoSendPending] = useState(false);
   const voice = useVoice(session.id, text => setInput(value => value + (value && !/\s$/.test(value) ? " " : "") + text), () => { if (settings.autoSend) setAutoSendPending(true); });
   const [continuousListening, setContinuousListening] = useState(false);
+  const callDialog = useRef<HTMLDialogElement>(null);
+  const callActive = useRef(false);
+  const [callStart, setCallStart] = useState(0);
+  const endCall = () => {
+    callActive.current = false;
+    setContinuousListening(false);
+    setAutoSendPending(false);
+    voice.stopListening();
+    voice.stop();
+    callDialog.current?.close();
+  };
+  const startCall = () => {
+    voice.stopListening();
+    voice.stop();
+    setCallStart(messages.length);
+    callActive.current = true;
+    setContinuousListening(true);
+    callDialog.current?.showModal();
+  };
+  useEffect(() => { endCall(); }, [session.id]);
   const wakePaused = desktop.activeId !== windowId || desktop.locked || sending || voice.busy || voice.listening || !persistence.ready || !!persistence.error || !settings.model;
   const wake = useWakeListening(continuousListening, wakePaused, settings.wakeWord ?? "ReactOS", session.id,
     text => {
@@ -276,7 +296,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           }
         }
       }
-      if (acc.trim()) void voice.speak(acc);
+      if (acc.trim() && (!continuousListening || callActive.current)) void voice.speak(acc);
       if (!acc) acc = "(empty response)";
       setMessages((m) => m.map((msg) => (msg.id === assistantMsg.id ? { ...msg, content: acc } : msg)));
     } catch (e) {
@@ -314,6 +334,32 @@ export function Chatbot({ windowId }: { windowId?: string }) {
         <span>{voice.playing ? 'Playing reply aloud' : voice.status || 'Preparing speech…'}</span>
         <button onClick={voice.stop}>Stop speech</button>
       </div>}
+      <dialog ref={callDialog} className="chatbot-call-dialog" aria-labelledby="chatbot-call-title"
+        onCancel={e => { e.preventDefault(); endCall(); }} onClose={() => { if (callActive.current) endCall(); }}>
+        <div className="chatbot-call-content">
+          <h2 id="chatbot-call-title">Call with Ollama</h2>
+          <p className="chatbot-call-model">{settings.model}</p>
+          <div className={`chatbot-call-orb ${voice.playing ? "is-speaking" : sending || voice.busy ? "is-thinking" : !wakePaused && wake.status && !wake.error ? "is-listening" : ""}`} aria-hidden="true"><span /></div>
+          <div className="chatbot-call-status" role="status">
+            <span className={`chatbot-call-dot${!wakePaused && wake.status && !wake.error ? " is-live" : ""}`} aria-hidden="true" />
+            {wake.error ? "Microphone unavailable" : voice.playing ? "Speaking…" : sending ? "Thinking…" : voice.busy ? "Preparing speech…" : wakePaused ? "Listening paused" : wake.status || "Connecting microphone…"}
+          </div>
+          <div className="chatbot-call-details">
+          <p className="chatbot-call-hint">Say “{settings.wakeWord || "ReactOS"}” followed by your message. {settings.autoSend ? "Your message sends automatically." : "Review your words, then send below."} {voice.mode === "off" && "Speech is off; replies appear as text."}</p>
+          {wake.error && <p className="chatbot-call-error" role="alert">{wake.error} End the call and try again.</p>}
+          {voice.status && <p role="status">{voice.status}</p>}
+          <div className="chatbot-call-transcripts">
+            <section><h3>You</h3><p>{wake.interim || input || [...messages.slice(callStart)].reverse().find(m => m.role === "user")?.content || "Your recognized words will appear here."}</p>
+              {!settings.autoSend && <button disabled={sending || !input.trim()} onClick={() => void send()}>Send message <i className="fa fa-arrow-up" aria-hidden="true" /></button>}
+            </section>
+            <section><h3>Ollama</h3><div>{messages.slice(callStart).filter(m => m.role === "assistant").at(-1)?.content
+              ? <Markdown>{messages.slice(callStart).filter(m => m.role === "assistant").at(-1)!.content}</Markdown>
+              : <p>{sending ? "Thinking…" : "Ready when you are."}</p>}</div></section>
+          </div>
+          </div>
+          <button className="chatbot-call-end" onClick={endCall} autoFocus><i className="fa fa-phone" aria-hidden="true" /> End call</button>
+        </div>
+      </dialog>
       <div className="chatbot-toolbar">
         <div className="chatbot-title">
           <i className="fa fa-comments" /> Ollama Chat
@@ -393,10 +439,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           <label><input type="checkbox" checked={settings.autoSend === true}
             onChange={e => setSettings(s => ({ ...s, autoSend: e.target.checked }))} /> Auto-send voice prompts</label>
           <p className="chatbot-hint">Send the prompt after releasing the microphone or Space, or after a wake-word message is recognized in continuous mode. When off, review the transcript and send it manually. Typed messages require Send or Enter.</p>
-          <label><input type="checkbox" checked={continuousListening} disabled={!voice.dictationSupported}
-            onChange={e => { voice.stopListening(); setContinuousListening(e.target.checked); }} /> Continuous listening</label>
-          <p className="chatbot-hint">Start a sentence with your wake word, followed by your message. You can also say the wake word, pause, then speak within 8 seconds. Other speech is ignored. Messages appear for review when auto-send is off. Listening pauses while the chatbot is inactive, the page is hidden, or a reply is in progress. Enable it again after reopening the chatbot. Browser recognition may send audio to an online service even while waiting for the wake word.</p>
-          {!voice.dictationSupported && <p className="chatbot-hint">Continuous listening requires a browser with speech recognition, HTTPS or localhost, and microphone permission.</p>}
+          <p className="chatbot-hint">Use the call button beside the microphone for continuous listening. Start each message with your wake phrase. Listening pauses during replies, when this window is inactive, or when the page is hidden. Browser recognition may send audio to an online service while waiting for the wake phrase.</p>
           <label>Ollama host</label>
           <div className="chatbot-settings-row">
             <input
@@ -533,6 +576,11 @@ export function Chatbot({ windowId }: { windowId?: string }) {
           aria-label="Hold to speak; release to finish" aria-pressed={voice.listening}
           title={voice.dictationSupported ? `Hold to speak (or hold Space / Enter). Release to ${settings.autoSend ? "send automatically" : "finish; review before sending"}.` : "Dictation unavailable: use a supported browser on HTTPS or localhost"}>
           <i className="fa fa-microphone" aria-hidden="true" />
+        </button>
+        <button className="chatbot-call-start" onClick={startCall}
+          disabled={!voice.dictationSupported || sending || !settings.model || !!persistence.error || imageBusy || !!image || !settings.wakeWord?.trim()}
+          aria-label="Start voice call" title="Start a continuous voice call" aria-haspopup="dialog">
+          <i className="fa fa-phone" aria-hidden="true" />
         </button>
         <button onClick={send} disabled={sending || imageBusy || (!input.trim() && !image) || !settings.model} title="Send">
           <i className={`fa ${sending ? "fa-spinner fa-spin" : "fa-paper-plane"}`} />

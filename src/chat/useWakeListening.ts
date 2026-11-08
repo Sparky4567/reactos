@@ -5,6 +5,7 @@ import { wakeCommand } from './wakeWord';
 export function useWakeListening(enabled: boolean, paused: boolean, wakeWord: string, context: string, append: (text: string) => void) {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  const [interim, setInterim] = useState('');
   const appendRef = useRef(append); appendRef.current = append;
   const [visible, setVisible] = useState(!document.hidden);
   useEffect(() => {
@@ -14,6 +15,7 @@ export function useWakeListening(enabled: boolean, paused: boolean, wakeWord: st
   }, []);
   useEffect(() => {
     setError('');
+    setInterim('');
     if (!enabled || paused || !visible || !wakeWord.trim()) { setStatus(''); return; }
     const Constructor = recognitionConstructor();
     if (!Constructor || !window.isSecureContext) return;
@@ -50,6 +52,7 @@ export function useWakeListening(enabled: boolean, paused: boolean, wakeWord: st
       }
       const partial = results.slice(delivered).map(result => result[0].transcript).join(' ');
       const command = wakeCommand(partial, wakeWord);
+      setInterim(command !== null ? command : Date.now() < armedUntil ? partial : '');
       if (command !== null || Date.now() < armedUntil) setStatus(`Listening: ${command ?? partial}`);
     };
     r.onerror = event => {
@@ -64,7 +67,10 @@ export function useWakeListening(enabled: boolean, paused: boolean, wakeWord: st
       try { r.start(); }
       catch (e) { failed = true; setStatus(''); setError(`Continuous listening stopped: ${(e as Error).message}`); }
     };
-    r.onend = () => { if (!disposed && !failed) timer = setTimeout(start, 300); };
+    r.onend = () => {
+      if (!disposed) setInterim('');
+      if (!disposed && !failed) timer = setTimeout(start, 300);
+    };
     start();
     return () => {
       disposed = true; clearTimeout(timer); clearTimeout(armTimer);
@@ -72,5 +78,5 @@ export function useWakeListening(enabled: boolean, paused: boolean, wakeWord: st
       r.abort();
     };
   }, [enabled, paused, visible, wakeWord, context]);
-  return { status, error };
+  return { status, error, interim };
 }

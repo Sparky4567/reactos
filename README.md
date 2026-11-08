@@ -24,7 +24,7 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - Optional image recognition with a separate vision model, attachment previews, and saved image descriptions for follow-up questions
 - Selectable chatbot speech: local Piper with download consent, browser speech, or Off
 - Browser voice dictation into editable chatbot prompts
-- Toggleable continuous listening with a configurable wake word or phrase
+- Full-screen voice calls with an animated orb, live transcripts, and a configurable wake phrase
 - Optional automatic sending of completed voice prompts in either listening mode
 - Memory review, search, editing, importance controls, and individual or bulk deletion
 - Interface-wide font scaling, including application controls and Markdown
@@ -498,10 +498,20 @@ The auto-send preference is saved with chatbot settings in SQLite and a local
 browser copy. It does not enable the microphone or continuous listening by itself,
 and is independent of the **Speech** setting for reading replies aloud.
 
-### Continuous listening and wake words
+### Voice calls and wake words
 
-In **Chatbot Settings**, set **Wake word or phrase** (default: **ReactOS**) and
-turn on **Continuous listening**. Start an utterance with the wake word, for
+In **Chatbot Settings**, set **Wake word or phrase** (default: **ReactOS**), then
+press the **call button beside the microphone** to start continuous listening.
+The dark, full-screen HTML dialog shows an animated orb, listening/thinking/speaking
+status, your live recognized words, and the latest bot response. On mobile it
+adapts to the viewport and safe areas; transcripts scroll independently while
+**End call** stays visible. Reduced-motion preferences disable orb animations.
+Use **End call** or **Escape** to stop recognition and speech and close the dialog.
+Replies follow the toolbar **Speech** setting; with speech off, they appear as text.
+With auto-send off, use **Send message** inside the call to submit your transcript.
+The conversation remains in the current chat.
+
+Start an utterance with the wake word, for
 example, “ReactOS, explain this project.” Matching ignores case, accepts a phrase,
 and requires whole words at the start; mid-sentence mentions do not activate it.
 The wake word is removed and the message is appended to the editable prompt for
@@ -512,11 +522,11 @@ seconds. After the message or timeout, recognition waits for the wake word again
 Continuous listening restarts after normal recognition endings and pauses during
 response generation or speech playback, while the chatbot is inactive or the
 desktop is locked, and while the browser tab is hidden. Microphone errors stop
-listening and display a message; toggle it off and on to retry. Hold-to-speak and
+listening and display a message; end the call and start another to retry. Hold-to-speak and
 its keyboard shortcut are disabled while continuous mode is enabled.
 
 You can clear the wake phrase, including on mobile, without the default being
-restored. An empty phrase stays saved and pauses wake-word listening until you
+restored. An empty phrase stays saved and disables starting a call until you
 enter a new word or phrase.
 
 The wake phrase is saved with chatbot settings in SQLite. Continuous listening
