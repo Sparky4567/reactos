@@ -1,13 +1,13 @@
 # ReactOS Browser Clone
 
-A browser desktop with switchable Ubuntu, Windows 11, ChromeOS, Google Fuchsia, Windows retro, Android, Matrix terminal, and Cyberpunk terminal appearances, built with React 19 and Bun. Ubuntu is the default.
+A browser desktop with switchable Ubuntu, Windows 11, ChromeOS, Google Fuchsia, Windows retro, Android, Matrix terminal, Cyberpunk terminal, PDA Color, and PDA E-ink appearances, built with React 19 and Bun. Ubuntu is the default.
 
 It simulates a full OS-like experience: boot screen, lock screen, taskbar, start menu, desktop icons, draggable and resizable windows, notifications, widgets, action center, context menus, and a virtual file system with several built-in apps.
 
 ## Features
 
 - Desktop with draggable icons and context menus (single-tap launch on touch/mobile)
-- Ubuntu (default), Windows 11, ChromeOS, Google Fuchsia, Windows retro, Android, Matrix terminal, and Cyberpunk terminal desktop styles with SQLite-backed appearance preferences
+- Ubuntu (default), Windows 11, ChromeOS, Google Fuchsia, Windows retro, Android, Matrix terminal, Cyberpunk terminal, PDA Color, and PDA E-ink desktop styles with SQLite-backed appearance preferences
 - Window manager (drag, resize, minimize, maximize, and viewport bounds clamping)
 - Mobile-responsive layout (auto-maximized windows on mobile, dynamic viewport height, safe-area inset support)
 - Responsive dock, shelf, or taskbar with touch-scrollable applications
@@ -51,6 +51,11 @@ bun dev
 ```
 
 This starts the dev server with hot module reloading. Open the URL printed in the terminal (usually http://localhost:3000).
+
+For access from another device on your network, run `bun run dev:lan`
+(or `bun run start:lan` in production). Chat IDs use a `crypto.getRandomValues()`
+fallback when `crypto.randomUUID()` is unavailable, including over LAN HTTP.
+Browser microphone and speech recognition features still require HTTPS or localhost.
 
 ### Run in production
 
@@ -300,7 +305,7 @@ applies to server uploads.
 ## Desktop appearance
 
 Open **Settings → System → Desktop style** (also available under Personalization)
-to choose Ubuntu, Windows 11, ChromeOS, Google Fuchsia, Windows retro, Android, Matrix terminal, or Cyberpunk terminal. Switching applies immediately and keeps
+to choose Ubuntu, Windows 11, ChromeOS, Google Fuchsia, Windows retro, Android, Matrix terminal, Cyberpunk terminal, PDA Color, or PDA E-ink. Switching applies immediately and keeps
 open applications running. Ubuntu uses an Activities bar, a left application dock,
 an application overview, orange accents, and aubergine backgrounds. On small screens
 the dock moves to the bottom. ChromeOS uses a floating shelf, a rounded launcher,
@@ -317,6 +322,10 @@ and a scanline grid wallpaper. Cyberpunk terminal combines neon cyan controls, m
 highlights, glowing frames, and a circuit grid wallpaper. Both styles use the Linux-style
 terminal prompt and provide coordinated light and dark palettes. Each style includes a
 preview in Settings and supports light and dark modes.
+
+PDA Color uses compact organizer controls, blue title bars, and a sky wallpaper.
+PDA E-ink imitates a monochrome display with paper tones, crisp borders, grayscale
+content, and reduced interface animation. Both support light and dark modes.
 
 Light/dark mode and background can be changed independently. Switching styles
 replaces the background only if it is that style's default; custom backgrounds are
@@ -335,7 +344,7 @@ chat histories or image uploads.
 ## Ubuntu-style terminal
 
 Open **Terminal** from the dock, desktop, or application launcher. Ubuntu,
-ChromeOS, Google Fuchsia, Android, Matrix terminal, and Cyberpunk terminal appearances use a `user@reactos:~$` prompt with Linux-style paths.
+ChromeOS, Google Fuchsia, Android, Matrix terminal, Cyberpunk terminal, PDA Color, and PDA E-ink appearances use a `user@reactos:~$` prompt with Linux-style paths.
 `/home/user` maps to the same virtual files shown in Files. Windows 11 and Windows retro use the
 PowerShell-style prompt and Windows path display, plus aliases such as `dir`,
 `type`, `copy`, `move`, `del`, and `cls`.

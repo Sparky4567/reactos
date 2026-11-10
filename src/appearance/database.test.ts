@@ -14,7 +14,7 @@ describe('Desktop appearance persistence', () => {
       let routes = appearanceRoutes(db);
       expect(await routes.GET().json()).toEqual({ revision: 1, preferences: DEFAULT_APPEARANCE });
       let revision = 1;
-      for (const desktopStyle of ['ubuntu', 'win11', 'chromeos', 'fuchsia', 'winretro', 'android', 'matrix', 'cyberpunk'] as DesktopStyle[]) {
+      for (const desktopStyle of ['ubuntu', 'win11', 'chromeos', 'fuchsia', 'winretro', 'android', 'matrix', 'cyberpunk', 'pda', 'eink'] as DesktopStyle[]) {
         const preferences = { desktopStyle, theme: 'light', wallpaper: WALLPAPERS[desktopStyle] };
         const response = await routes.PUT(put({ revision, preferences }));
         expect(response.status).toBe(200);
@@ -49,7 +49,7 @@ describe('Desktop appearance persistence', () => {
       expect(workspace(style, 1440, 900)).toEqual({ width: 1440, height: 824 });
       expect(workspace(style, 390, 844)).toEqual({ width: 390, height: 768 });
     }
-    for (const style of ['matrix', 'cyberpunk'] as DesktopStyle[]) {
+    for (const style of ['matrix', 'cyberpunk', 'pda', 'eink'] as DesktopStyle[]) {
       expect(workspace(style, 1440, 900)).toEqual({ width: 1440, height: 852 });
       expect(workspace(style, 390, 844)).toEqual({ width: 390, height: 796 });
     }

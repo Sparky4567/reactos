@@ -1,3 +1,4 @@
+import { chatId } from './id';
 // Browser adaptation of Qualia's neuromorphic memory. See QUALIA-LICENSE.
 export interface Trace {
   id: string; content: string; activation: number; importance: number;
@@ -12,7 +13,7 @@ export function remember(memories: Trace[], content: string, now = Date.now()): 
   if (!normalized) return memories;
   const existing = memories.find(m => m.content.toLowerCase() === normalized.toLowerCase());
   if (existing) return memories.map(m => m.id === existing.id ? { ...m, activation: Math.min(1, activation(m, now) + 0.15), lastSpike: now } : m);
-  return [...memories, { id: crypto.randomUUID(), content: normalized, activation: 0.5, importance: 0.5, createdAt: now, updatedAt: now, lastSpike: now, consolidatedAt: now, links: {} }].slice(-500);
+  return [...memories, { id: chatId(), content: normalized, activation: 0.5, importance: 0.5, createdAt: now, updatedAt: now, lastSpike: now, consolidatedAt: now, links: {} }].slice(-500);
 }
 export function recall(memories: Trace[], query: string, now = Date.now()) {
   const terms = words(query);

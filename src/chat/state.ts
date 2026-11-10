@@ -1,3 +1,4 @@
+import { chatId } from './id';
 import type { Trace } from './memory';
 export interface ImageObservation { name: string; model: string; description: string }
 export interface Msg { id: string; role: 'user' | 'assistant'; content: string; imageObservation?: ImageObservation }
@@ -5,7 +6,7 @@ export interface Session { id: string; title: string; messages: Msg[]; persona: 
 export interface Persona { id: string; name: string; content: string }
 export interface ChatState { sessions: Session[]; activeId: string; personas: Persona[]; memories: Trace[] }
 export const CHAT_KEY = 'reactos.chat.v1';
-export function newSession(): Session { return { id: crypto.randomUUID(), title: 'New chat', messages: [], persona: 'You are a helpful assistant.', memoryEnabled: true }; }
+export function newSession(): Session { return { id: chatId(), title: 'New chat', messages: [], persona: 'You are a helpful assistant.', memoryEnabled: true }; }
 export function loadChat(): ChatState {
   try {
     const data = JSON.parse(localStorage.getItem(CHAT_KEY) || 'null');

@@ -8,6 +8,8 @@ const styles: { id: DesktopStyle; name: string; description: string }[] = [
   { id: 'android', name: 'Android', description: 'Material colors · Pill controls · Rounded panels' },
   { id: 'matrix', name: 'Matrix terminal', description: 'Phosphor green · Monospace · Scanline grid' },
   { id: 'cyberpunk', name: 'Cyberpunk terminal', description: 'Neon cyan · Magenta glow · Circuit grid' },
+  { id: 'pda', name: 'PDA Color', description: 'Pocket organizer · Blue title bars · Colorful icons' },
+  { id: 'eink', name: 'PDA E-ink', description: 'Monochrome paper · Crisp borders · Quiet display' },
   { id: 'chromeos', name: 'ChromeOS', description: 'Floating shelf · Rounded cards · Soft colors' },
 ];
 export function AppearanceChooser() {

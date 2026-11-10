@@ -1,3 +1,4 @@
+import { chatId } from '@/chat/id';
 import { useEffect, useRef, useState } from "react";
 import { loadChat, newSession, type Msg } from "@/chat/state";
 import { recall, remember } from "@/chat/memory";
@@ -16,7 +17,7 @@ const SETTINGS_KEY = "reactos.ollama.settings";
 type Settings = ChatSettings;
 
 function uid() {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  return chatId();
 }
 
 function loadSettings(): Settings {
@@ -473,7 +474,7 @@ export function Chatbot({ windowId }: { windowId?: string }) {
             <textarea aria-label="System prompt" rows={5} value={session.persona} onChange={e => editSession({ persona: e.target.value })} />
             <div className="chatbot-settings-row">
               <input aria-label="Template name" placeholder="Template name" value={personaName} onChange={e => setPersonaName(e.target.value)} />
-              <button disabled={!personaName.trim()} onClick={() => setChat(c => ({ ...c, personas: [...c.personas.filter(p => p.name !== personaName.trim()), { id: crypto.randomUUID(), name: personaName.trim(), content: session.persona }] }))}>Save template</button>
+              <button disabled={!personaName.trim()} onClick={() => setChat(c => ({ ...c, personas: [...c.personas.filter(p => p.name !== personaName.trim()), { id: chatId(), name: personaName.trim(), content: session.persona }] }))}>Save template</button>
             </div>
             <p className="chatbot-hint">Edits apply to the next response. Saving an existing name replaces that template.</p>
             <label><input type="checkbox" checked={session.memoryEnabled} onChange={e => editSession({ memoryEnabled: e.target.checked })} /> Neuromorphic memory</label>
