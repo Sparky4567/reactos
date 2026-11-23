@@ -1,5 +1,6 @@
 import { serve } from "bun";
 import { visionRoute } from "./chat/vision";
+import { isContextSize } from "./chat/document";
 import { appearanceRoutes } from "./appearance/database";
 import { galleryRoutes } from "./gallery/database";
 import { ChatDatabase, chatStateRoutes } from "./chat/database";
@@ -167,6 +168,10 @@ const server = serve({
         const model = String(body?.model ?? "").trim();
         const messages = Array.isArray(body?.messages) ? body.messages : (body?.prompt ? [{ role: "user", content: String(body.prompt) }] : []);
         if (!model) return Response.json({ error: "Missing model" }, { status: 400 });
+        const contextSize = body?.contextSize;
+        if (contextSize !== undefined && !isContextSize(contextSize)) {
+          return Response.json({ error: "Context window must be a positive whole number." }, { status: 400 });
+        }
 
         const base = `http://${host}:11434`;
         let upstream: Response;
@@ -174,7 +179,12 @@ const server = serve({
           upstream = await fetch(`${base}/api/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ model, messages, stream: true }),
+            body: JSON.stringify({
+              model,
+              messages,
+              stream: true,
+              options: contextSize === undefined ? undefined : { num_ctx: contextSize },
+            }),
           });
         } catch (e) {
           return Response.json({ error: (e as Error).message }, { status: 502 });
@@ -234,7 +244,6 @@ const server = serve({
                   }
                 } catch {}
               }
-              if (!doneSent) send({ type: "done" });
             } catch (e) {
               send({ type: "error", message: (e as Error).message });
             } finally {

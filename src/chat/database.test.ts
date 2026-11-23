@@ -31,6 +31,7 @@ describe('SQLite chat persistence', () => {
       const document = sample();
       expect(db.read()).toBeNull();
       expect(db.initialize(document)).toEqual({ revision: 1, document });
+      document.settings.contextSize = 32768;
       document.chat.sessions[0]!.messages.push({ id: 'user-2', role: 'user', content: 'Another message' });
       expect(db.save(document, 1)).toBe(2);
       db.close();

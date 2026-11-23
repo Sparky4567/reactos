@@ -187,6 +187,13 @@ model. The **New chat** button creates a session. Use the session selector to sw
 conversations, the name field to rename one, and **Delete session** to remove its
 history. Each session keeps its own messages, system prompt, and memory toggle.
 
+In **Chatbot → Settings**, set **Context window (tokens)** to give a long chat
+more room. Chatbot sends this value as Ollama's `num_ctx` option. Leave the field
+blank to use the inference server's default. The context window needs room for
+the conversation history, persona, recalled memories, new message, and reply.
+Use a value your model and available memory support. If the server still
+reports the same limit, check its context setting.
+
 In chatbot settings, edit **Persona for this session** to change the system prompt.
 Enter a template name and choose **Save template** to reuse it in other sessions;
 **Load a saved template** applies it to the current session. Saving an existing name
@@ -220,7 +227,10 @@ in [src/chat/QUALIA-LICENSE](src/chat/QUALIA-LICENSE).
 Chatbot sessions and their messages, saved persona templates, neuromorphic memory
 (including activation traces and associations), and Ollama/font settings are saved
 on the Bun server using `bun:sqlite`. The default file is `data/chatbot.sqlite`,
-relative to the project directory. Set `CHAT_DB_PATH` to use a different location:
+relative to the project directory. Chatbot saves your message when you send it
+and saves the assistant's reply once the inference server confirms completion.
+Partial replies are visible while they stream. Interrupted replies show an error
+and are discarded. Set `CHAT_DB_PATH` to use a different location:
 
 ```sh
 CHAT_DB_PATH=/persistent/reactos/chatbot.sqlite bun start
