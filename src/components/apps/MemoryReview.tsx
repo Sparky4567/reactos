@@ -1,12 +1,16 @@
 import { useId, useState } from 'react';
-import { activation, editMemory, forget, memoryEditError, remember, reviewMemory, type Trace } from '@/chat/memory';
+import { activation, editMemory, forget, memoryEditError, remember, reviewMemories, reviewMemory, type Trace } from '@/chat/memory';
 interface Props {
   memories: Trace[];
   onChange: (update: (memories: Trace[]) => Trace[]) => void;
   disabled: boolean;
 }
 const timestamp = (time?: number) => time === undefined ? 'Not recorded' : new Date(time).toLocaleString();
-function MemoryCard({ memory, memories, onChange, disabled }: Props & { memory: Trace }) {
+function MemoryCard({ memory, memories, onChange, disabled, selected, onSelect }: Props & {
+  memory: Trace;
+  selected: boolean;
+  onSelect: (checked: boolean) => void;
+}) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(memory.content);
   const [importance, setImportance] = useState(memory.importance);
@@ -24,6 +28,11 @@ function MemoryCard({ memory, memories, onChange, disabled }: Props & { memory: 
   };
   return <article className="memory-card" aria-label={`Memory: ${memory.content.slice(0, 80)}`}>
     <div className="memory-card-heading"><span className={`memory-review-badge ${memory.reviewedAt === undefined ? '' : 'reviewed'}`}>{memory.reviewedAt === undefined ? 'Needs review' : 'Reviewed'}</span><span>Activation {Math.round(activation(memory) * 100)}% · Importance {Math.round(memory.importance * 100)}%</span></div>
+    {memory.reviewedAt === undefined && <label className="memory-select">
+      <input type="checkbox" checked={selected} disabled={disabled} onChange={event => onSelect(event.target.checked)}
+        aria-label={`Select for review: ${memory.content.slice(0, 80)}`} />
+      Select for review
+    </label>}
     {editing ? <form className="memory-edit-form" onSubmit={e => { e.preventDefault(); save(); }}>
       <fieldset disabled={disabled}>
         <label htmlFor={`${id}-text`}>Memory text</label>
@@ -54,9 +63,27 @@ export function MemoryReview({ memories, onChange, disabled }: Props) {
   const [sort, setSort] = useState('recent');
   const [draft, setDraft] = useState('');
   const [notice, setNotice] = useState('');
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
   const searchId = useId();
   const unreviewed = memories.filter(m => m.reviewedAt === undefined).length;
   const visible = memories.filter(m => m.content.toLowerCase().includes(query.trim().toLowerCase()) && (filter === 'all' || (filter === 'unreviewed' ? m.reviewedAt === undefined : m.reviewedAt !== undefined))).sort((a, b) => sort === 'importance' ? b.importance - a.importance : sort === 'activation' ? activation(b) - activation(a) : (b.updatedAt ?? b.createdAt ?? b.lastSpike) - (a.updatedAt ?? a.createdAt ?? a.lastSpike));
+  const reviewableIds = visible.filter(memory => memory.reviewedAt === undefined).map(memory => memory.id);
+  const selectedForReview = new Set(reviewableIds.filter(id => selectedIds.has(id)));
+  const updateSelection = (id: string, checked: boolean) => {
+    setSelectedIds(current => {
+      const next = new Set(current);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const markSelectedReviewed = () => {
+    if (disabled || !selectedForReview.size) return;
+    const reviewedAt = Date.now();
+    onChange(current => reviewMemories(current, selectedForReview, reviewedAt));
+    setSelectedIds(new Set());
+    setNotice(`Marked ${selectedForReview.size} ${selectedForReview.size === 1 ? 'memory' : 'memories'} as reviewed.`);
+  };
   return <section className="chatbot-memory-review" aria-label="Memory review">
     <div className="memory-review-heading"><div><h2>Memory review</h2><p>{memories.length} memories · {unreviewed} need review</p></div><button disabled={disabled || !memories.length} className="memory-delete" onClick={() => { if (confirm(`Delete all ${memories.length} shared memories? This cannot be undone. Chat messages are kept.`)) { onChange(() => []); setNotice('All memories deleted.'); } }}>Delete all memories</button></div>
     <p className="memory-scope-note">Memories are shared across sessions and saved to SQLite. Edits apply to future recall. Deleting a memory keeps existing chat messages, which can still be used as conversation context.</p>
@@ -65,12 +92,18 @@ export function MemoryReview({ memories, onChange, disabled }: Props) {
       <label htmlFor={`${searchId}-add`}>Add a memory</label><div><textarea id={`${searchId}-add`} rows={2} maxLength={2000} disabled={disabled} placeholder="A fact, preference, or instruction to remember…" value={draft} onChange={e => setDraft(e.target.value)} /><button disabled={disabled || !draft.trim()}>Remember</button></div>
     </form>
     <div className="memory-review-filters">
-      <label htmlFor={searchId}>Search memories<input id={searchId} type="search" placeholder="Search memory text…" value={query} onChange={e => setQuery(e.target.value)} /></label>
-      <label>Review status<select value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All memories</option><option value="unreviewed">Needs review</option><option value="reviewed">Reviewed</option></select></label>
+      <label htmlFor={searchId}>Search memories<input id={searchId} type="search" placeholder="Search memory text…" value={query} onChange={e => { setQuery(e.target.value); setSelectedIds(new Set()); }} /></label>
+      <label>Review status<select value={filter} onChange={e => { setFilter(e.target.value); setSelectedIds(new Set()); }}><option value="all">All memories</option><option value="unreviewed">Needs review</option><option value="reviewed">Reviewed</option></select></label>
       <label>Sort by<select value={sort} onChange={e => setSort(e.target.value)}><option value="recent">Recently changed</option><option value="importance">Importance</option><option value="activation">Activation</option></select></label>
     </div>
     <p className="memory-result-count" role="status">Showing {visible.length} of {memories.length} memories{notice ? ` · ${notice}` : ''}</p>
-    <div className="memory-review-list">{visible.map(memory => <MemoryCard key={memory.id} memory={memory} memories={memories} onChange={onChange} disabled={disabled} />)}</div>
+    {reviewableIds.length > 0 && <div className="memory-batch-actions">
+      <button disabled={disabled || selectedForReview.size === reviewableIds.length} onClick={() => setSelectedIds(new Set(reviewableIds))}>Select all shown that need review</button>
+      <button disabled={disabled || !selectedForReview.size} onClick={() => setSelectedIds(new Set())}>Clear selection</button>
+      <button disabled={disabled || !selectedForReview.size} onClick={markSelectedReviewed}>Mark selected as reviewed ({selectedForReview.size})</button>
+    </div>}
+    <div className="memory-review-list">{visible.map(memory => <MemoryCard key={memory.id} memory={memory} memories={memories} onChange={onChange} disabled={disabled}
+      selected={selectedForReview.has(memory.id)} onSelect={checked => updateSelection(memory.id, checked)} />)}</div>
     {!visible.length && <div className="memory-review-empty"><i className="fa fa-lightbulb-o" aria-hidden="true" /><p>{memories.length ? 'No memories match your search or review filter.' : 'No memories yet. Add one above or chat with memory enabled.'}</p></div>}
   </section>;
 }

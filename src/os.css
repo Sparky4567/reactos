@@ -1077,12 +1077,15 @@ body { background: #000; }
 .memory-review-filters { display: flex; flex-wrap: wrap; gap: 10px; }
 .memory-review-filters label:first-child { flex: 1; min-width: 140px; }
 .memory-result-count { font-size: .6875rem; opacity: .7; margin: 12px 0; }
+.memory-batch-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .memory-review-list { display: flex; flex-direction: column; gap: 12px; }
 .memory-card { padding: 14px; border: 1px solid var(--line, #8885); border-radius: 12px; background: var(--surface-raised, #8881); min-width: 0; }
 .memory-card-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: .6875rem; }
 .memory-card-heading > span:last-child { opacity: .75; }
 .memory-review-badge { border: 1px solid #a8783455; border-radius: 20px; padding: 3px 8px; color: inherit; background: #c38b1b18; }
 .memory-review-badge.reviewed { border-color: #4e995955; background: #4e995918; }
+.memory-select { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: .75rem; }
+.memory-select input { margin: 0; accent-color: var(--accent, #0067c0); }
 .memory-content { white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0; line-height: 1.5; }
 .memory-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .chatbot-memory-review .memory-delete { color: #b42318; }

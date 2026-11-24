@@ -26,7 +26,7 @@ It simulates a full OS-like experience: boot screen, lock screen, taskbar, start
 - Browser voice dictation into editable chatbot prompts
 - Full-screen voice calls with an animated orb, live transcripts, and a configurable wake phrase
 - Optional automatic sending of completed voice prompts in either listening mode
-- Memory review, search, editing, importance controls, and individual or bulk deletion
+- Individual and batch memory review, search, editing, importance controls, and individual or bulk deletion
 - Interface-wide font scaling, including application controls and Markdown
 - Settings for desktop style, light/dark mode, wallpaper, password, and mobile-friendly navigation
 - Notifications, widgets panel, action center
@@ -392,6 +392,10 @@ timestamps, and learned associations under **Memory details**. Older memories ma
 show **Not recorded** for timestamps that were not tracked previously.
 
 Use **Mark reviewed** to record a review without reinforcing recall strength.
+To review a batch, check **Select for review** on each memory you want to include,
+or click **Select all shown that need review** to select every unreviewed memory
+in the current results. Click **Mark selected as reviewed** to review the batch.
+Changing the search or review status filter clears the selection.
 **Edit** lets you correct the text and adjust importance; **Save changes** also
 marks the memory reviewed. Blank text and duplicate memory text are rejected.
 Changing text resets that memory's activation and learned associations, allowing

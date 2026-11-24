@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { activation, editMemory, forget, memoryEditError, recall, remember, reviewMemory } from './memory';
+import { activation, editMemory, forget, memoryEditError, recall, remember, reviewMemories, reviewMemory } from './memory';
 
 describe('Qualia browser memory', () => {
   test('deduplicates and reinforces an existing memory', () => {
@@ -70,6 +70,18 @@ describe('Memory reviews and corrections', () => {
     expect(edited[0]!.importance).toBe(0);
     expect(edited[0]!.links).toEqual(original[0]!.links);
     expect(edited[0]!.lastSpike).toBe(2000);
+  });
+  test('reviews only the selected memories with a shared timestamp', () => {
+    const original = ['first fact', 'second fact', 'third fact', 'fourth fact']
+      .reduce((memories, content) => remember(memories, content, 1000), [] as ReturnType<typeof remember>);
+    const [first, second, third, fourth] = reviewMemory(original, original[3]!.id, 2000);
+    const reviewed = reviewMemories([first!, second!, third!, fourth!], new Set([first!.id, third!.id, 'missing']), 3000);
+
+    expect(reviewed[0]).toEqual({ ...first!, reviewedAt: 3000 });
+    expect(reviewed[1]).toBe(second);
+    expect(reviewed[2]).toEqual({ ...third!, reviewedAt: 3000 });
+    expect(reviewed[3]).toBe(fourth);
+    expect(reviewed[3]!.reviewedAt).toBe(2000);
   });
   test('rejects blank, oversized, duplicate and invalid edits without losing data', () => {
     const original = remember(remember([], 'first fact'), 'second fact');

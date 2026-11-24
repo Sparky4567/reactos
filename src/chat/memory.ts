@@ -59,5 +59,8 @@ export function editMemory(memories: Trace[], id: string, content: string, impor
   } : m);
 }
 export function reviewMemory(memories: Trace[], id: string, now = Date.now()): Trace[] {
-  return memories.map(m => m.id === id ? { ...m, reviewedAt: now } : m);
+  return reviewMemories(memories, new Set([id]), now);
+}
+export function reviewMemories(memories: Trace[], ids: ReadonlySet<string>, now = Date.now()): Trace[] {
+  return memories.map(m => ids.has(m.id) ? { ...m, reviewedAt: now } : m);
 }
